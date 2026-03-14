@@ -25,6 +25,7 @@ import { useProfileHandlers } from './hooks/useProfileHandlers';
 
 // Components
 import { ProfileModals } from './components/ProfileModals';
+import SocialLinkSections from './partials/SocialLinkSections';
 
 export default function Profile() {
     const dispatch = useDispatch();
@@ -257,6 +258,15 @@ export default function Profile() {
                                 onDelete={handlers.handleDeleteCertificate}
                                 onAdd={() => { setSelectedCertificate(null); openModal('certificates'); }}
                             />
+                        </motion.div>
+
+                        <motion.div
+                            initial="hidden"
+                            animate="visible"
+                            variants={sectionVariants}
+                            transition={{ duration: 0.5, delay: 0.5 }}
+                        >
+                            <SocialLinkSections currentUser={currentUser} handlers={handlers}/>
                         </motion.div>
 
                         {/* <AwardsSection

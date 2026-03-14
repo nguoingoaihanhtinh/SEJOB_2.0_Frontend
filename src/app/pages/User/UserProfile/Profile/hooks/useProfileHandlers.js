@@ -15,6 +15,9 @@ import {
     validateCertificateForm,
     mapGenderToBackend,
 } from './utils';
+import api from "../../../../../modules/AxiosInstance";
+import _ from 'lodash';
+
 
 export const useProfileHandlers = ({
     setUser,
@@ -617,6 +620,49 @@ export const useProfileHandlers = ({
         }
     }
 
+    const handleGetSocialLinks = async (userId) => {
+        try {
+            const data = await api.get(`/api/social-links`);
+            return _.get(data, 'data');
+        } catch (error) {
+            console.error('Error getting social links:', error);
+            alert(error?.message || 'Có lỗi xảy ra khi lấy thông tin mạng xã hội');
+            return [];
+        }
+    }
+
+    const handleUpdateSocialLink = async (userId, socialLinkData) => {
+        try {
+            const data = await api.put(`/api/social-links/${userId}`, socialLinkData);
+            return _.get(data, 'data');
+        } catch (error) {
+            console.error('Error updating social link:', error);
+            alert(error?.message || 'Có lỗi xảy ra khi cập nhật thông tin mạng xã hội');
+            return null;
+        }
+    }
+
+    const handleDeleteSocialLink = async (userId, { platform }) => {
+        try {
+            const data = await api.delete(`/api/social-links/${userId}?platform=${platform}`);
+            return _.get(data, 'data');
+        } catch (error) {
+            console.error('Error deleting social link:', error);
+            alert(error?.message || 'Có lỗi xảy ra khi xóa thông tin mạng xã hội');
+            return null;
+        }
+    }
+
+    const handleCreateSocialLink = async (userId, socialLinkData) => {
+        try {
+            const data = await api.post(`/api/social-links/${userId}`, socialLinkData);
+            return _.get(data, 'data');
+        } catch (error) {
+            console.error('Error creating social link:', error);
+            alert(error?.message || 'Có lỗi xảy ra khi tạo thông tin mạng xã hội');
+            return null;
+        }
+    }
 
     return {
         handleCVFileChange,
@@ -637,5 +683,9 @@ export const useProfileHandlers = ({
         handleDeleteCertificate,
         handleDeleteAward,
         handleToggleOpenForOpportunities,
+        handleGetSocialLinks,
+        handleUpdateSocialLink,
+        handleDeleteSocialLink,
+        handleCreateSocialLink
     };
 };
