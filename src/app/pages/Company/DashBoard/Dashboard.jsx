@@ -4,7 +4,7 @@ import { Calendar, ChevronRight, TrendingUp, TrendingDown, Eye, FileCheck, X, In
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getCompanyStats } from "@/modules";
+import { getCompanyStats, getJobsByCompanyId } from "@/modules";
 import { Spin } from "antd";
 
 const Dashboard = () => {
@@ -15,22 +15,29 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("Overview");
   const [showInfoBanner, setShowInfoBanner] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [jobsPage, setJobsPage] = useState(1);
+  const [jobsLimit, setJobsLimit] = useState(4);
 
   const currentUser = useSelector((state) => state.auth.user) || {};
   const { stats, statsStatus, statsError } = useSelector((state) => state.company);
+  const { jobs, pagination: jobsPagination } = useSelector((state) => state.jobs);
 
   // Fetch company stats on mount
   useEffect(() => {
-    const companyId = currentUser.company.id
+    const companyId = currentUser.company.id;
     if (companyId) {
-      dispatch(getCompanyStats({
-        companyId: companyId,
-        year: selectedYear
-      }));
+      dispatch(
+        getCompanyStats({
+          companyId: companyId,
+          year: selectedYear,
+        }),
+      );
+      // Fetch company jobs
+      dispatch(getJobsByCompanyId({ companyId, page: jobsPage, limit: jobsLimit }));
     } else {
-      console.warn('No company ID found in currentUser');
+      console.warn("No company ID found in currentUser");
     }
-  }, [dispatch, currentUser, selectedYear]);
+  }, [dispatch, currentUser, selectedYear, jobsPage, jobsLimit]);
 
   // Tính toán tuần hiện tại (từ thứ 2 đến chủ nhật)
   const currentWeekRange = useMemo(() => {
@@ -48,8 +55,8 @@ const Dashboard = () => {
 
     // Format ngày tháng theo định dạng DD/MM
     const formatDateDDMM = (date) => {
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
       return `${day}/${month}`;
     };
 
@@ -59,7 +66,7 @@ const Dashboard = () => {
       fromShort: formatDateDDMM(monday),
       toShort: formatDateDDMM(sunday),
       monday,
-      sunday
+      sunday,
     };
   }, []);
 
@@ -69,7 +76,7 @@ const Dashboard = () => {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     return monthNames.map((month, index) => {
-      const monthKey = `${selectedYear}-${String(index + 1).padStart(2, '0')}`;
+      const monthKey = `${selectedYear}-${String(index + 1).padStart(2, "0")}`;
       return {
         day: month,
         jobPosted: stats.timeline.jobsByMonth?.[monthKey] || 0,
@@ -78,59 +85,26 @@ const Dashboard = () => {
     });
   }, [stats, selectedYear]);
 
-  const jobs = [
-    {
-      id: 1,
-      title: "Social Media Assistant",
-      company: "Nomad",
-      location: "Paris, France",
-      type: "Full-Time",
-      tags: ["Marketing", "Design"],
-      applied: 5,
-      capacity: 10,
-      color: "bg-emerald-500",
-      icon: "🏢",
-    },
-    {
-      id: 2,
-      title: "Brand Designer",
-      company: "Nomad",
-      location: "Paris, France",
-      type: "Full-Time",
-      tags: ["Business", "Design"],
-      applied: 5,
-      capacity: 10,
-      color: "bg-blue-500",
-      icon: "📦",
-    },
-    {
-      id: 3,
-      title: "Interactive Developer",
-      company: "Terraform",
-      location: "Berlin, Germany",
-      type: "Full-Time",
-      tags: ["Marketing", "Design"],
-      applied: 5,
-      capacity: 10,
-      color: "bg-cyan-500",
-      icon: "🔷",
-    },
-    {
-      id: 4,
-      title: "Product Designer",
-      company: "ClassPass",
-      location: "Berlin, Germ...",
-      type: "Full-Time",
-      tags: ["Business", "Design"],
-      applied: 5,
-      capacity: 10,
-      color: "bg-purple-600",
-      icon: "⭕",
-    },
-  ];
+  const jobsData = useMemo(() => {
+    if (!jobs || jobs.length === 0) return [];
+
+    return jobs.map((job) => ({
+      id: job.id,
+      title: job.title,
+      company: job.company?.name || currentUser.company?.name || "Company",
+      location: job.location || "Remote",
+      type: job.employment_type?.name || "Full-time",
+      tags: job.categories?.slice(0, 2).map((c) => c.name) || [],
+      applied: job.applied_count || 0,
+      capacity: job.capacity || 10,
+      color:
+        job.color || ["bg-emerald-500", "bg-blue-500", "bg-cyan-500", "bg-purple-600"][Math.floor(Math.random() * 4)],
+      icon: job.icon || ["🏢", "📦", "🔷", "⭕"][Math.floor(Math.random() * 4)],
+    }));
+  }, [jobs, currentUser]);
 
   // Loading state
-  if (statsStatus === 'loading') {
+  if (statsStatus === "loading") {
     return (
       <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
         <Spin size="large" />
@@ -139,7 +113,7 @@ const Dashboard = () => {
   }
 
   // Error state
-  if (statsStatus === 'failed') {
+  if (statsStatus === "failed") {
     return (
       <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
         <div className="text-center">
@@ -188,7 +162,9 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-2xl font-bold text-gray-900">{t("company.dashboard.greeting", { name: currentUser.first_name })}</h3>
+            <h3 className="text-2xl font-bold text-gray-900">
+              {t("company.dashboard.greeting", { name: currentUser.first_name })}
+            </h3>
             {/* <p className="text-gray-500 text-sm">
               {t("company.dashboard.statisticReport", { from: currentWeekRange.fromLong, to: currentWeekRange.toLong })}
             </p> */}
@@ -202,17 +178,19 @@ const Dashboard = () => {
         {/* Top Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div
-            onClick={() => navigate('/applicants')}
+            onClick={() => navigate("/applicants")}
             className="bg-purple-600 text-white py-4 px-6 rounded-xl flex justify-between items-center cursor-pointer hover:bg-purple-700 transition"
           >
             <div>
               <div className="text-4xl font-bold mb-1">{overview.totalApplications || 0}</div>
-              <div className="text-sm opacity-90">{t("company.dashboard.totalApplications") || "Total Applications"}</div>
+              <div className="text-sm opacity-90">
+                {t("company.dashboard.totalApplications") || "Total Applications"}
+              </div>
             </div>
             <ChevronRight className="w-6 h-6" />
           </div>
           <div
-            onClick={() => navigate('job-listing')}
+            onClick={() => navigate("job-listing")}
             className="bg-cyan-400 text-white py-4 px-6 rounded-xl flex justify-between items-center cursor-pointer hover:bg-cyan-500 transition"
           >
             <div>
@@ -240,7 +218,8 @@ const Dashboard = () => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">{t("company.dashboard.jobStatistics")}</h3>
                 <p className="text-sm text-gray-500">
-                  {t("company.dashboard.yearlyStatistics", { year: selectedYear }) || `Showing statistics for year ${selectedYear}`}
+                  {t("company.dashboard.yearlyStatistics", { year: selectedYear }) ||
+                    `Showing statistics for year ${selectedYear}`}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -248,8 +227,9 @@ const Dashboard = () => {
                   <button
                     key={year}
                     onClick={() => setSelectedYear(year)}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition ${selectedYear === year ? "text-purple-600 bg-purple-50" : "text-gray-600 hover:bg-gray-50"
-                      }`}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                      selectedYear === year ? "text-purple-600 bg-purple-50" : "text-gray-600 hover:bg-gray-50"
+                    }`}
                   >
                     {year}
                   </button>
@@ -257,8 +237,11 @@ const Dashboard = () => {
                 {!stats?.availableYears?.includes(new Date().getFullYear()) && (
                   <button
                     onClick={() => setSelectedYear(new Date().getFullYear())}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition ${selectedYear === new Date().getFullYear() ? "text-purple-600 bg-purple-50" : "text-gray-600 hover:bg-gray-50"
-                      }`}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                      selectedYear === new Date().getFullYear()
+                        ? "text-purple-600 bg-purple-50"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
                   >
                     {new Date().getFullYear()}
                   </button>
@@ -270,15 +253,16 @@ const Dashboard = () => {
               {[
                 { key: "Overview", label: t("company.dashboard.overview") },
                 { key: "Jobs Posted", label: t("company.dashboard.jobsposted") || "Jobs Posted" },
-                { key: "Applications", label: t("company.dashboard.applications") || "Applications" }
+                { key: "Applications", label: t("company.dashboard.applications") || "Applications" },
               ].map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`pb-3 text-sm font-medium transition ${activeTab === tab.key
-                    ? "text-purple-600 border-b-2 border-purple-600"
-                    : "text-gray-500 hover:text-gray-700"
-                    }`}
+                  className={`pb-3 text-sm font-medium transition ${
+                    activeTab === tab.key
+                      ? "text-purple-600 border-b-2 border-purple-600"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
                 >
                   {tab.label}
                 </button>
@@ -321,7 +305,9 @@ const Dashboard = () => {
                 </div>
                 <div className="text-3xl font-bold text-gray-900">{overview.totalJobs || 0}</div>
                 <div className="flex items-center gap-1 mt-1">
-                  <span className="text-sm text-gray-600">{t("company.dashboard.activeJobs")}: {overview.activeJobs || 0}</span>
+                  <span className="text-sm text-gray-600">
+                    {t("company.dashboard.activeJobs")}: {overview.activeJobs || 0}
+                  </span>
                 </div>
               </div>
               <div className="p-4 border border-gray-200 rounded-lg">
@@ -333,7 +319,9 @@ const Dashboard = () => {
                 </div>
                 <div className="text-3xl font-bold text-gray-900">{overview.totalApplications || 0}</div>
                 <div className="flex items-center gap-1 mt-1">
-                  <span className="text-sm text-gray-600">{t("company.dashboard.successRate")}: {overview.successfulApplications || 0}</span>
+                  <span className="text-sm text-gray-600">
+                    {t("company.dashboard.successRate")}: {overview.successfulApplications || 0}
+                  </span>
                 </div>
               </div>
             </div>
@@ -358,7 +346,13 @@ const Dashboard = () => {
                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                       <div className="h-full flex">
                         {Object.entries(employmentTypes).map(([_, count], index) => {
-                          const colors = ["bg-purple-600", "bg-emerald-400", "bg-cyan-400", "bg-blue-400", "bg-red-500"];
+                          const colors = [
+                            "bg-purple-600",
+                            "bg-emerald-400",
+                            "bg-cyan-400",
+                            "bg-blue-400",
+                            "bg-red-500",
+                          ];
                           const total = Object.values(employmentTypes).reduce((a, b) => a + b, 0);
                           const percentage = total > 0 ? (count / total) * 100 : 0;
                           return (
@@ -379,7 +373,7 @@ const Dashboard = () => {
                           { bg: "bg-emerald-400", text: "text-emerald-400" },
                           { bg: "bg-cyan-400", text: "text-cyan-400" },
                           { bg: "bg-blue-400", text: "text-blue-400" },
-                          { bg: "bg-red-500", text: "text-red-500" }
+                          { bg: "bg-red-500", text: "text-red-500" },
                         ];
                         const color = colors[index % colors.length];
 
@@ -427,61 +421,71 @@ const Dashboard = () => {
           </div>
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-900">{t("company.dashboard.jobUpdates")}</h3>
-            <button className="flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium text-sm">
+            <button
+              className="flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium text-sm"
+              onClick={() => navigate("/job-listing")}
+            >
               {t("company.dashboard.viewAll")}
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {jobs.map((job) => (
-              <div key={job.id} className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition">
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`w-12 h-12 ${job.color} rounded-lg flex items-center justify-center text-2xl`}>
-                    {job.icon}
-                  </div>
-                  <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-xs font-medium rounded-full">
-                    {job.type}
-                  </span>
-                </div>
-
-                <h4 className="font-semibold text-gray-900 mb-1">{job.title}</h4>
-                <p className="text-sm text-gray-500 mb-4">
-                  {job.company} • {job.location}
-                </p>
-
-                <div className="flex gap-2 mb-4">
-                  {job.tags.map((tag, idx) => (
-                    <span
-                      key={idx}
-                      className={`px-3 py-1 text-xs font-medium rounded-full ${tag === "Marketing" || tag === "Business"
-                        ? "bg-orange-50 text-orange-600 border border-orange-200"
-                        : "bg-purple-50 text-purple-600 border border-purple-200"
-                        }`}
-                    >
-                      {tag}
+          {jobsData.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {jobsData.map((job) => (
+                <div key={job.id} className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-12 h-12 ${job.color} rounded-lg flex items-center justify-center text-2xl`}>
+                      {job.icon}
+                    </div>
+                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-xs font-medium rounded-full">
+                      {job.type}
                     </span>
-                  ))}
-                </div>
-
-                <div className="mb-2">
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-emerald-500 rounded-full"
-                      style={{ width: `${(job.applied / job.capacity) * 100}%` }}
-                    ></div>
                   </div>
-                </div>
 
-                <p className="text-xs text-gray-500">
-                  <span className="font-medium text-gray-900">
-                    {t("company.dashboard.applied", { count: job.applied })}
-                  </span>{" "}
-                  {t("company.dashboard.of", { count: job.capacity })} {t("company.dashboard.capacity")}
-                </p>
-              </div>
-            ))}
-          </div>
+                  <h4 className="font-semibold text-gray-900 mb-1">{job.title}</h4>
+                  <p className="text-sm text-gray-500 mb-4">
+                    {job.company} • {job.location}
+                  </p>
+
+                  <div className="flex gap-2 mb-4">
+                    {job.tags.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className={`px-3 py-1 text-xs font-medium rounded-full ${
+                          tag === "Marketing" || tag === "Business"
+                            ? "bg-orange-50 text-orange-600 border border-orange-200"
+                            : "bg-purple-50 text-purple-600 border border-purple-200"
+                        }`}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="mb-2">
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-emerald-500 rounded-full"
+                        style={{ width: `${(job.applied / job.capacity) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-gray-500">
+                    <span className="font-medium text-gray-900">
+                      {t("company.dashboard.applied", { count: job.applied })}
+                    </span>{" "}
+                    {t("company.dashboard.of", { count: job.capacity })} {t("company.dashboard.capacity")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>{t("company.dashboard.noJobs") || "No jobs posted yet"}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
