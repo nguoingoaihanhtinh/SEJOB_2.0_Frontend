@@ -30,4 +30,9 @@ applicationApi.create = async (data) => {
     return _.get(res, 'data');
 }
 
+applicationApi.getOneByJobId = async (jobId) => {
+    const res = await api.get(`/api/applications/job/${jobId}`);
+    return _.get(res, 'data');
+}
+
 export { cvApi, mediaApi, applicationApi };

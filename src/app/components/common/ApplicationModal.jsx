@@ -7,6 +7,7 @@ export default function ApplicationModal({ open, setOpen, jobId }) {
   const currentUser = useSelector(state => state.auth.user);
 
   const [existingCv, setExistingCv] = useState(null);
+  const [isApplied, setIsApplied] = useState(false);
   const [cvMode, setCvMode] = useState('existing'); // 'existing' | 'upload'
   const [uploadedFile, setUploadedFile] = useState(null); // File object - chỉ lưu FE
   const [uploading, setUploading] = useState(false);
@@ -28,11 +29,11 @@ export default function ApplicationModal({ open, setOpen, jobId }) {
 
   useEffect(() => {
     if (currentUser) {
+      getApplication();
       const studentInfo = _.get(currentUser, 'student_info[0]', {});
       const cv = _.get(studentInfo, 'cv[0]', null);
-
       setForm({
-        full_name: _.get(currentUser, 'full_name', ''),
+        full_name: _.join(_.compact([_.get(currentUser, 'last_name'), _.get(currentUser, 'first_name')]), ' '),
         email: _.get(currentUser, 'email', ''),
         phone: _.get(currentUser, 'phone', '') || _.get(studentInfo, 'phone', ''),
         previous_job: _.get(studentInfo, 'previous_job', ''),
@@ -49,6 +50,13 @@ export default function ApplicationModal({ open, setOpen, jobId }) {
       }
     }
   }, [currentUser]);
+
+  const getApplication = async () => {
+    const application = await applicationApi.getOneByJobId(jobId);
+    if (application?.success) {
+      setIsApplied(true);
+    }
+  }
 
   const validate = () => {
     const newErrors = {};
@@ -117,7 +125,7 @@ export default function ApplicationModal({ open, setOpen, jobId }) {
     try {
       // Bước 1: Upload file nếu cần - API chỉ được gọi tại đây
       let resume_url = cvMode === 'existing'
-        ? (existingCv?.url || existingCv)
+        ? (existingCv?.filepath || existingCv)
         : undefined;
 
       if (cvMode === 'upload' && uploadedFile) {
@@ -177,12 +185,28 @@ export default function ApplicationModal({ open, setOpen, jobId }) {
       style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      {isApplied && <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900">You have already applied for this position</h3>
+            <p className="text-sm text-gray-500 mt-0.5">You can view your application in the applications section</p>
+          </div>
+          <button
+            onClick={handleClose}
+            className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>}
+      {!isApplied && <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Apply for Position</h2>
+            <h3 className="text-xl font-semibold text-gray-900">Apply for Position</h3>
             <p className="text-sm text-gray-500 mt-0.5">Fill in your details below</p>
           </div>
           <button
@@ -200,7 +224,7 @@ export default function ApplicationModal({ open, setOpen, jobId }) {
 
           {/* Personal Info */}
           <section>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Personal Information</h3>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Personal Information</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Full Name" required error={errors.full_name}>
                 <input name="full_name" value={form.full_name} onChange={handleChange}
@@ -223,7 +247,7 @@ export default function ApplicationModal({ open, setOpen, jobId }) {
 
           {/* Links */}
           <section>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Online Presence</h3>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Online Presence</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="LinkedIn URL" error={errors.linkedin_url}>
                 <div className="relative">
@@ -246,7 +270,7 @@ export default function ApplicationModal({ open, setOpen, jobId }) {
 
           {/* Resume */}
           <section>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Resume / CV</h3>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Resume / CV</h4>
             <div className="space-y-3">
               {existingCv && (
                 <label className={radioCardClass(cvMode === 'existing')} onClick={() => setCvMode('existing')}>
@@ -335,11 +359,11 @@ export default function ApplicationModal({ open, setOpen, jobId }) {
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
           <button type="button" onClick={handleClose}
-            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
+            className="px-4 py-2 cursor-pointer text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
             Cancel
           </button>
           <button onClick={handleSubmit} disabled={isLoading || submitSuccess}
-            className={`px-6 py-2 text-sm font-semibold rounded-lg transition-all flex items-center gap-2
+            className={`px-6 py-2 cursor-pointer text-sm font-semibold rounded-lg transition-all flex items-center gap-2
               ${submitSuccess
                 ? 'bg-green-500 text-white'
                 : 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-60 disabled:cursor-not-allowed'}`}
@@ -355,7 +379,7 @@ export default function ApplicationModal({ open, setOpen, jobId }) {
             )}
           </button>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
