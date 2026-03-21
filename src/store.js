@@ -23,7 +23,7 @@ import studentsReducer from "./app/modules/services/studentService";
 import recommendationReducer from "./app/modules/services/recommendationService";
 import jobNotificationSubscriptionReducer from "./app/modules/services/jobNotificationSubscription";
 import adminReducer from "./app/modules/services/adminService";
-
+import chatbotReducer from "./app/modules/services/chatbotService";
 export default configureStore({
   reducer: {
     auth: authReducer,
@@ -50,5 +50,6 @@ export default configureStore({
     recommendations: recommendationReducer,
     jobNotificationSubscription: jobNotificationSubscriptionReducer,
     admin: adminReducer,
+    chatbot: chatbotReducer,
   },
 });
