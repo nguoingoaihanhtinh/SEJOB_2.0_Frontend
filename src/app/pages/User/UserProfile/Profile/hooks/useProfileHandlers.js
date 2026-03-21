@@ -686,6 +686,6 @@ export const useProfileHandlers = ({
         handleGetSocialLinks,
         handleUpdateSocialLink,
         handleDeleteSocialLink,
-        handleCreateSocialLink
+        handleCreateSocialLink,
     };
 };

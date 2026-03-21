@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { BorderLinearProgress } from "@/components";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";

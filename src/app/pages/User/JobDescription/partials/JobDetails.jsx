@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { CircleCheck, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";

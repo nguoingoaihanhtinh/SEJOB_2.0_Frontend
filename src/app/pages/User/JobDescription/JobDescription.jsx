@@ -338,7 +338,7 @@ export default function JobDescription({
           <p>{t('job.apply.loginRequired')}</p>
         </Modal>
       ) : (
-        <ApplicationModal open={isModalOpen} onVisibleChange={setIsModalOpen} jobId={job?.id} />
+        <ApplicationModal open={isModalOpen} setOpen={setIsModalOpen} jobId={job?.id} />
       )}
     </div>
   );
