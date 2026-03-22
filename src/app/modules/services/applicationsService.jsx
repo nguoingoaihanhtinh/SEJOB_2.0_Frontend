@@ -175,6 +175,20 @@ export const getAdminApplicationsByJobId = createAsyncThunk(
     }
 );
 
+export const scoreApplication = createAsyncThunk(
+    "applications/scoreApplication",
+    async (id, { rejectWithValue }) => {
+        try {
+            const response = await api.get(`${apiBaseUrl}/${id}/score`, {
+                withCredentials: true,
+            });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Something went wrong");
+        }
+    }
+);
+
 const initialState = {
     application: null,
     applications: [],
@@ -183,6 +197,8 @@ const initialState = {
     paginationByJobId: null,
     status: "idle",
     error: null,
+    scoreResult: null,
+    isScoring: false,
 };
 
 const applicationsSlice = createSlice({
@@ -324,6 +340,18 @@ const applicationsSlice = createSlice({
             .addCase(getAdminApplicationsByJobId.rejected, (state, action) => {
                 state.status = "failed";
                 state.error = action.payload || "Failed to fetch applications";
+            })
+            .addCase(scoreApplication.pending, (state) => {
+                state.isScoring = true;
+                state.error = null;
+            })
+            .addCase(scoreApplication.fulfilled, (state, action) => {
+                state.isScoring = false;
+                state.scoreResult = action.payload.data;
+            })
+            .addCase(scoreApplication.rejected, (state, action) => {
+                state.isScoring = false;
+                state.error = action.payload || "Failed to score application";
             });
     },
 });

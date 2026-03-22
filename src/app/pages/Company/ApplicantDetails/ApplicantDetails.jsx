@@ -9,6 +9,7 @@ import { Spin } from "antd";
 import { LoadingOutlined } from '@ant-design/icons';
 import Sidebar from "./partials/Sidebar";
 import { HiringTab, InterviewScheduleTab, ProfileTab, ResumeTab } from "../../../components/manage/studentInfo";
+import AIScoreTab from "./partials/AIScoreTab";
 
 export default function ApplicantDetails() {
   const { t } = useTranslation();
@@ -16,8 +17,8 @@ export default function ApplicantDetails() {
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("profile");
   const id = useParams().id;
-  const {application, status: applicationStatus} = useSelector((state) => state.applications);
-  const {user, status: userStatus} = useSelector((state) => state.user);
+  const { application, status: applicationStatus } = useSelector((state) => state.applications);
+  const { user, status: userStatus } = useSelector((state) => state.user);
   const studentInfo = user?.student_info[0] ?? {};
   const [refreshFlag, setRefreshFlag] = useState(true);
 
@@ -28,7 +29,7 @@ export default function ApplicantDetails() {
   const fetchData = async () => {
     const status = location.state?.status;
     if (status === ApplicationStatus.APPLIED) {
-      await dispatch(updateCompanyApplication({ id, data: { status: ApplicationStatus.VIEWED } }) );
+      await dispatch(updateCompanyApplication({ id, data: { status: ApplicationStatus.VIEWED } }));
     }
     const result = await dispatch(getCompanyApplicationDetail(id)).unwrap();
     const application = result.data;
@@ -63,7 +64,7 @@ export default function ApplicantDetails() {
     <div className="bg-gray-50 px-6 py-4 flex-1 mx-auto min-h-screen space-y-4">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button 
+        <button
           className="p-2 hover:bg-gray-100 rounded-lg"
           onClick={() => window.history.back()}
         >
@@ -105,6 +106,12 @@ export default function ApplicantDetails() {
                 >
                   {t("applicantDetails.tabs.interview")}
                 </button>
+                <button
+                  onClick={() => setActiveTab("ai_score")}
+                  className={`py-4 cursor-pointer font-bold transition-all ${activeTab === "ai_score" ? "text-indigo-600 border-b-2 border-indigo-600" : "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-80"}`}
+                >
+                  ✨ AI Analysis
+                </button>
               </div>
             </div>
 
@@ -122,6 +129,10 @@ export default function ApplicantDetails() {
 
               {activeTab === "interview" && (
                 <InterviewScheduleTab />
+              )}
+
+              {activeTab === "ai_score" && (
+                <AIScoreTab application={application} />
               )}
             </div>
           </div>
