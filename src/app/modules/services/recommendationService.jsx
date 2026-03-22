@@ -103,11 +103,27 @@ export const getRecommendedJobsWithTopCV = createAsyncThunk(
     }
 );
 
+export const getTopicSuggestions = createAsyncThunk(
+    "recommendations/getTopicSuggestions",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await api.get(`${apiBaseUrl}/topics`, {
+                withCredentials: true,
+            });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Something went wrong");
+        }
+    }
+);
+
 const initialState = {
     recommendedJobs: [],
     similarJobs: [],
     matchingStudents: [],
     pagination: null,
+    topicSuggestions: null,
+    isRequestingTopics: false,
     status: "idle",
     error: null,
 };
@@ -196,6 +212,21 @@ const recommendationSlice = createSlice({
             })
             .addCase(getRecommendedJobsWithTopCV.rejected, (state, action) => {
                 state.status = "failed";
+                state.error = action.payload;
+            });
+
+        // getTopicSuggestions
+        builder
+            .addCase(getTopicSuggestions.pending, (state) => {
+                state.isRequestingTopics = true;
+                state.error = null;
+            })
+            .addCase(getTopicSuggestions.fulfilled, (state, action) => {
+                state.isRequestingTopics = false;
+                state.topicSuggestions = action.payload.data;
+            })
+            .addCase(getTopicSuggestions.rejected, (state, action) => {
+                state.isRequestingTopics = false;
                 state.error = action.payload;
             });
     },

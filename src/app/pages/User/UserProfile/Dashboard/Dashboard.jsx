@@ -25,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import { ProfileSidebar, JobCard } from '../../../../components';
 import { UserActivities } from './partials';
+import AITopicsCard from './partials/AITopicsCard';
 import { useSelector, useDispatch } from 'react-redux';
 import { getApplications, getSavedJobs } from '../../../../modules';
 
@@ -63,7 +64,7 @@ export default function ProfileDashboard() {
         invitations: 0, // TODO: Implement invitations when API is available
         interviewed: applications.filter(app => app.status === 'Interview' || app.status === 'Interviewed').length,
         unsuitable: applications.filter(app => app.status === 'Rejected' || app.status === 'Declined').length,
-        interviewedPercent: applications.length > 0 
+        interviewedPercent: applications.length > 0
             ? Math.round((applications.filter(app => app.status === 'Interview' || app.status === 'Interviewed').length / applications.length) * 100)
             : 0
     }), [applications, savedJobs]);
@@ -71,12 +72,12 @@ export default function ProfileDashboard() {
     // Map application data to job card format (similar to MyJobs)
     const recentApplications = useMemo(() => {
         if (!applications || applications.length === 0) return [];
-        
+
         return applications.slice(0, 3).map(app => {
             // Prefer API structure: app.job and app.company
             const job = app.job || app.jobs || app;
             if (!job) return null;
-            
+
             const company = app.company || job.company || job.companies || {};
 
             return {
@@ -104,9 +105,9 @@ export default function ProfileDashboard() {
                 status: job.status,
                 dateApplied: new Date(app.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
                 applicationStatus: app.status || 'Pending',
-                statusColor: 
+                statusColor:
                     app.status === 'Approved' || app.status === 'Interview' ? 'primary' :
-                    app.status === 'Rejected' || app.status === 'Declined' ? 'error' : 'warning',
+                        app.status === 'Rejected' || app.status === 'Declined' ? 'error' : 'warning',
                 ...job
             };
         }).filter(Boolean);
@@ -228,6 +229,8 @@ export default function ProfileDashboard() {
                         >
                             <UserActivities stats={stats} />
                         </motion.div>
+
+                        <AITopicsCard />
 
                         {/* Recent Applications History */}
                         {/* Or Recommend Jobs */}
