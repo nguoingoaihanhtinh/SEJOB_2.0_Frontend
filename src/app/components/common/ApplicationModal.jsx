@@ -161,6 +161,7 @@ export default function ApplicationModal({ open, setOpen, jobId }) {
       setTimeout(() => {
         setSubmitSuccess(false);
         setOpen(false);
+        setIsApplied(true);
       }, 2000);
     } catch (err) {
       console.log(err)

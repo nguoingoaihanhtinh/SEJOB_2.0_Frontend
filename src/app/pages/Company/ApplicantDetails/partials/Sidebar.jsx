@@ -67,7 +67,7 @@ export default function Sidebar({ application, studentInfo }) {
                     </div>
                     <div>
                         <div className="font-semibold text-gray-900">{application.job.title ?? "N/A"}</div>
-                        <p className="text-sm text-gray-600">{application.job.categories[0].name ?? "N/A"} • {application.job.working_time ?? "N/A"}</p>
+                        {/* <p className="text-sm text-gray-600">{application.job.categories[0].name ?? "N/A"} • {application.job.working_time ?? "N/A"}</p> */}
                     </div>
                 </div>
 

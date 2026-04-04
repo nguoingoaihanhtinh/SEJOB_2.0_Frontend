@@ -1,9 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Popover, PopoverTrigger, PopoverContent } from "../ui";
-import { Bell, Briefcase, UserCheck, AlertCircle, CheckCheck, ChevronRight } from "lucide-react";
+import { Bell, Briefcase, UserCheck, AlertCircle, CheckCheck, ChevronRight, FileText, ClipboardList } from "lucide-react";
 import { useSelector } from "react-redux";
 import { notificationApi } from "../../../api";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import _ from "lodash";
+// ─── Const ──────────────────────────────────────────────────────────────────
+const NOTIFICATION_TYPE = {
+  NEW_APPLICATION: "new_application",
+  JOB_STATUS_UPDATED: "job_status_updated",
+  USER_CREATED: "user_created",
+  APPLICATION_STATUS_UPDATED: "application_status_updated",
+}
 
 // ─── Colors ──────────────────────────────────────────────────────────────────
 
@@ -40,7 +49,7 @@ function formatRelativeTime(dateStr) {
 
 function getNotifMeta(type) {
   switch (type) {
-    case "user_created":
+    case NOTIFICATION_TYPE.USER_CREATED:
       return {
         icon: <UserCheck size={15} />,
         label: "Chào mừng",
@@ -49,7 +58,7 @@ function getNotifMeta(type) {
         tagBg: "#E1F5EE",
         tagColor: "#0F6E56",
       };
-    case "job_status_updated":
+    case NOTIFICATION_TYPE.JOB_STATUS_UPDATED:
       return {
         icon: <Briefcase size={15} />,
         label: "Công việc",
@@ -57,6 +66,24 @@ function getNotifMeta(type) {
         iconColor: "#3B6D11",
         tagBg: "#EAF3DE",
         tagColor: "#3B6D11",
+      };
+    case NOTIFICATION_TYPE.NEW_APPLICATION:
+      return {
+        icon: <FileText size={15} />,
+        label: "Ứng tuyển mới",
+        iconBg: "#EEF2FF",
+        iconColor: "#4F46E5",
+        tagBg: "#EEF2FF",
+        tagColor: "#4F46E5",
+      };
+    case NOTIFICATION_TYPE.APPLICATION_STATUS_UPDATED:
+      return {
+        icon: <ClipboardList size={15} />,
+        label: "Cập nhật ứng tuyển",
+        iconBg: "#FEF3C7",
+        iconColor: "#D97706",
+        tagBg: "#FEF3C7",
+        tagColor: "#D97706",
       };
     default:
       return {
@@ -72,12 +99,15 @@ function getNotifMeta(type) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function NotifItem({ notif, onMarkRead }) {
+function NotifItem({ notif, onMarkRead, onClick }) {
   const meta = getNotifMeta(notif.type);
 
   return (
     <div
-      onClick={() => !notif.is_read && onMarkRead(notif.id)}
+      onClick={() => {
+        if (!notif.is_read) onMarkRead(notif.id);
+        onClick(notif);
+      }}
       style={{
         display: "flex",
         gap: "12px",
@@ -243,6 +273,7 @@ function LoadingState() {
 
 export default function NotificationSection() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const currentUser = useSelector((state) => state.auth.user);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -274,6 +305,12 @@ export default function NotificationSection() {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
     notificationApi.markAsRead({ id });
   }, []);
+
+  const handleNavigate = (notif) => {
+    if (notif.type === NOTIFICATION_TYPE.NEW_APPLICATION && _.get(notif, 'data.application_id')) {
+      navigate(`/applicants/${notif.data.application_id}`);
+    }
+  }
 
   const handleMarkAllRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
@@ -407,7 +444,7 @@ export default function NotificationSection() {
             <LoadingState />
           ) : notifications.length > 0 ? (
             notifications.map((notif) => (
-              <NotifItem key={notif.id} notif={notif} onMarkRead={handleMarkRead} />
+              <NotifItem key={notif.id} notif={notif} onMarkRead={handleMarkRead} onClick={() => handleNavigate(notif)}/>
             ))
           ) : (
             <EmptyState />

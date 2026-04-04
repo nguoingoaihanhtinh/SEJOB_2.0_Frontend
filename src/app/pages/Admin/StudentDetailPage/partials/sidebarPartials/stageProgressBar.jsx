@@ -14,7 +14,7 @@ export default function StageProgressBar({ currentStage }) {
         return (
             <div className="flex gap-1">
                 {Array.from({ length: 4 }).map((_, idx) => (
-                    <div className="flex-1 h-2 bg-green-500 rounded"/>
+                    <div key={idx} className="flex-1 h-2 bg-green-500 rounded"/>
                 ))}
             </div>
         );
@@ -24,7 +24,7 @@ export default function StageProgressBar({ currentStage }) {
         return (
             <div className="flex gap-1">
                 {Array.from({ length: 4 }).map((_, idx) => (
-                    <div className="flex-1 h-2 bg-red-500 rounded"/>
+                    <div key={idx} className="flex-1 h-2 bg-red-500 rounded"/>
                 ))}
             </div>
         );
@@ -33,10 +33,10 @@ export default function StageProgressBar({ currentStage }) {
     return (
         <div className="flex gap-1">
             {Array.from({ length: indexStage[currentStage] }).map((_, idx) => (
-                <div className="flex-1 h-2 bg-blue-600 rounded" />
+                <div key={idx} className="flex-1 h-2 bg-blue-600 rounded" />
             ))}
             {Array.from({ length: 4 - indexStage[currentStage] }).map((_, idx) => (
-                <div className="flex-1 h-2 bg-gray-200 rounded" />
+                <div key={idx} className="flex-1 h-2 bg-gray-200 rounded" />
             ))}
         </div>
     );
