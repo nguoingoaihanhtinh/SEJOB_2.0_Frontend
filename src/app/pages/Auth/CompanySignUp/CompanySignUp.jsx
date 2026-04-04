@@ -777,7 +777,7 @@ export default function CompanySignUp() {
                             value={branch.country_id}
                             onChange={e => {
                               const arr = [...companyBranches];
-                              arr[idx].country_id = e.target.value;
+                              arr[idx].country_id = Number(e.target.value);
                               arr[idx].province_id = '';
                               arr[idx].ward_id = '';
                               setCompanyBranches(arr);

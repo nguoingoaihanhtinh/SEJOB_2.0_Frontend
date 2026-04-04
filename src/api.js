@@ -4,6 +4,7 @@ import api from '../src/app/modules/AxiosInstance'
 const cvApi = {};
 const mediaApi = {};
 const applicationApi = {};
+const notificationApi = {};
 
 cvApi.getCV = async (studentId) => {
     try {
@@ -35,4 +36,20 @@ applicationApi.getOneByJobId = async (jobId) => {
     return _.get(res, 'data');
 }
 
-export { cvApi, mediaApi, applicationApi };
+notificationApi.getNotifications = async (params) => {
+    const res = await api.get(`/api/notifications`, { params });
+    return _.get(res, 'data');
+}
+
+notificationApi.markAsRead = async (body) => {
+    const res = await api.put(`/api/notifications/mark-as-read`, body);
+    return _.get(res, 'data');
+}
+
+notificationApi.markAllAsRead = async (body) => {
+    const res = await api.put(`/api/notifications/mark-all-as-read`, body);
+    return _.get(res, 'data');
+}
+
+
+export { cvApi, mediaApi, applicationApi, notificationApi };

@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { logout } from "../../modules";
 import LangButtonGroup from "../common/LangButtonGroup";
-
+import NotificationSection from "../sections/NotificationSection";
 export default function TopBar() {
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -34,9 +34,7 @@ export default function TopBar() {
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="relative p-2 hover:bg-accent rounded-md transition-colors">
-          <Bell className="w-5 h-5 text-muted-foreground" />
-        </button>
+        <NotificationSection />
         <Button
           className="
             bg-primary/90 text-white rounded-lg 
