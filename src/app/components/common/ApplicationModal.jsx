@@ -52,6 +52,8 @@ export default function ApplicationModal({ open, setOpen, jobId }) {
   }, [currentUser]);
 
   const getApplication = async () => {
+    if (!jobId) return;
+
     const application = await applicationApi.getOneByJobId(jobId);
     if (application?.success) {
       setIsApplied(true);

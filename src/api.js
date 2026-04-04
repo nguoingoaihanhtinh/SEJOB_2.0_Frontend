@@ -2,6 +2,7 @@ import _ from 'lodash';
 import api from '../src/app/modules/AxiosInstance'
 
 const cvApi = {};
+const jobApi = {};
 const mediaApi = {};
 const applicationApi = {};
 const notificationApi = {};
@@ -13,6 +14,16 @@ cvApi.getCV = async (studentId) => {
     } catch (error) {
         alert(error?.message || 'Có lỗi xảy ra khi lấy cv người dùng');
         return null;
+    }
+}
+
+jobApi.getJobById = async (jobId) => {
+    try {
+        const data = await api.get(`/api/jobs/${jobId}`);
+        return _.get(data, 'data');
+    } catch (error) {
+        alert(error?.message || 'Có lỗi xảy ra khi lấy job');
+        throw error;
     }
 }
 
@@ -52,4 +63,4 @@ notificationApi.markAllAsRead = async (body) => {
 }
 
 
-export { cvApi, mediaApi, applicationApi, notificationApi };
+export { cvApi, mediaApi, applicationApi, notificationApi, jobApi};

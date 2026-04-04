@@ -33,7 +33,7 @@ import { logout } from "@/modules/services/authService";
 import { useDispatch } from "react-redux";
 import { CustomAlert } from "../../components";
 import { useCustomAlert } from "../../hooks/useCustomAlert";
-import NotificationsPopup from "../../components/common/NotificationsPopup";
+import NotificationSection from "../../components/sections/NotificationSection";
 
 
 export default function Header() {
@@ -154,7 +154,7 @@ export default function Header() {
               {isLoggedIn ? (
                 <>
                   {/* notifications component (handles its own state) */}
-                  <NotificationsPopup compact />
+                  <NotificationSection compact />
 
                   <IconButton
                     onClick={handleUserMenuOpen}
@@ -292,7 +292,7 @@ export default function Header() {
             {isLoggedIn ? (
               <>
                 {/* notifications component (handles its own state) */}
-                <NotificationsPopup />
+                <NotificationSection />
                 <IconButton
                   onClick={handleUserMenuOpen}
                   sx={{
