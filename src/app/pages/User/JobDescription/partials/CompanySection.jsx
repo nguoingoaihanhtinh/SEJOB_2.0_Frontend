@@ -1,6 +1,6 @@
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import { srcAsset } from "../../../../lib";
 import { useTranslation } from "react-i18next";
 
 export default function CompanySection({ job }) {
