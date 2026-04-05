@@ -19,7 +19,7 @@ export default function ApplicantDetails() {
   const id = useParams().id;
   const { application, status: applicationStatus } = useSelector((state) => state.applications);
   const { user, status: userStatus } = useSelector((state) => state.user);
-  const studentInfo = user?.student_info[0] ?? {};
+  const studentInfo = application?.student ?? user?.student_info?.[0] ?? {};
   const [refreshFlag, setRefreshFlag] = useState(true);
 
   useEffect(() => {

@@ -1,14 +1,17 @@
 import { FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-export default function ResumeTab({ studentInfo }) {
+export default function ResumeTab({ application, studentInfo }) {
     const { t } = useTranslation();
 
+    // Priority: CV submitted with this application > student's profile CV
+    const resumeUrl = application?.resume_url || studentInfo?.cv?.[0]?.filepath || null;
+
     return (
-        <div className={`w-full ${studentInfo.cv && studentInfo.cv[0] ? 'h-[800px]' : 'h-64'} border rounded-lg overflow-hidden`}>
-            {studentInfo.cv && studentInfo.cv[0] ? (
+        <div className={`w-full ${resumeUrl ? 'h-[800px]' : 'h-64'} border rounded-lg overflow-hidden`}>
+            {resumeUrl ? (
                 <embed
-                    src={studentInfo.cv[0].filepath}
+                    src={resumeUrl}
                     type="application/pdf"
                     width="100%"
                     height="100%"

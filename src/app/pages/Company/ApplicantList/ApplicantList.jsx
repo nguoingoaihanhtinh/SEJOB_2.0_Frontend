@@ -108,6 +108,33 @@ export default function ApplicantsTable() {
       render: (job) => job?.title || "N/A",
     },
     {
+      title: "Score",
+      dataIndex: "cv_score",
+      key: "cv_score",
+      align: "center",
+      sorter: (a, b) => (a.cv_score || 0) - (b.cv_score || 0),
+      render: (score) => {
+        if (score === null || score === undefined) return <span className="text-gray-400">N/A</span>;
+        
+        let colorClass = "text-red-600 font-bold";
+        if (score >= 80) colorClass = "text-emerald-600 font-bold";
+        else if (score >= 55) colorClass = "text-blue-600 font-bold";
+        else if (score >= 35) colorClass = "text-orange-600 font-bold";
+
+        return (
+          <div className="flex flex-col items-center">
+            <span className={colorClass}>{score}%</span>
+            <div className="w-12 h-1 bg-gray-100 rounded-full mt-1 overflow-hidden">
+               <div 
+                 className={`h-full ${score >= 80 ? 'bg-emerald-500' : score >= 55 ? 'bg-blue-500' : score >= 35 ? 'bg-orange-500' : 'bg-red-500'}`} 
+                 style={{ width: `${score}%` }}
+               />
+            </div>
+          </div>
+        );
+      },
+    },
+    {
       title: t("applicantList.table.hiringStage"),
       dataIndex: "status",
       key: "status",

@@ -177,9 +177,13 @@ export const getAdminApplicationsByJobId = createAsyncThunk(
 
 export const scoreApplication = createAsyncThunk(
     "applications/scoreApplication",
-    async (id, { rejectWithValue }) => {
+    async (params, { rejectWithValue }) => {
         try {
-            const response = await api.get(`${apiBaseUrl}/${id}/score`, {
+            const id = typeof params === 'object' ? params.id : params;
+            const forceRefresh = typeof params === 'object' ? params.forceRefresh : false;
+            const url = forceRefresh ? `${apiBaseUrl}/${id}/score?forceRefresh=true` : `${apiBaseUrl}/${id}/score`;
+            
+            const response = await api.get(url, {
                 withCredentials: true,
             });
             return response.data;
@@ -204,7 +208,12 @@ const initialState = {
 const applicationsSlice = createSlice({
     name: "applications",
     initialState,
-    reducers: {},
+    reducers: {
+        clearScoreResult: (state) => {
+            state.scoreResult = null;
+            state.isScoring = false;
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(getCompanyApplications.pending, (state) => {
@@ -356,4 +365,5 @@ const applicationsSlice = createSlice({
     },
 });
 
+export const { clearScoreResult } = applicationsSlice.actions;
 export default applicationsSlice.reducer;

@@ -153,6 +153,26 @@ export default function ApplicationModal({ open, onVisibleChange, jobId }) {
     setSelectedCvId('upload');
   };
 
+  // Get CVs list from store or currentUser — must be above handleSubmitApplication
+  const cvs = cvsFromStore.length > 0
+    ? cvsFromStore
+    : (Array.isArray(currentUser?.student_info)
+      ? currentUser.student_info[0]?.cv
+      : currentUser?.student_info?.cv) || [];
+
+  const latestCv = cvs[0] || null;
+
+  // Get user info for display
+  const studentInfo = Array.isArray(currentUser?.student_info)
+    ? currentUser.student_info[0]
+    : currentUser?.student_info;
+
+  const userInfo = currentUser ? {
+    fullName: `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || currentUser.first_name || '',
+    email: currentUser.email || '',
+    phone: studentInfo?.phone_number || ''
+  } : null;
+
   const handleSubmitApplication = async () => {
     let uploadedFileName = null;
 
@@ -231,27 +251,8 @@ export default function ApplicationModal({ open, onVisibleChange, jobId }) {
     }
   };
 
-  // Get CVs list from store or currentUser
-  const cvs = cvsFromStore.length > 0
-    ? cvsFromStore
-    : (Array.isArray(currentUser?.student_info)
-      ? currentUser.student_info[0]?.cv
-      : currentUser?.student_info?.cv) || [];
 
-  const latestCv = cvs[0] || null;
 
-  // Get user info for display
-  const studentInfo = Array.isArray(currentUser?.student_info)
-    ? currentUser.student_info[0]
-    : currentUser?.student_info;
-
-  const userInfo = currentUser ? {
-    fullName: `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || currentUser.first_name || '',
-    email: currentUser.email || '',
-    phone: studentInfo?.phone_number || ''
-  } : null;
-
-  // Modal for LACK status
   if (infoStatus === infoApplyStatus.LACK) {
     return (
       <>
