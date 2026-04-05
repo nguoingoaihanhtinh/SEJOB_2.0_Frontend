@@ -22,6 +22,7 @@ import { mockJobs } from '../../../../../mocks/mockData';
 import { useSelector, useDispatch } from 'react-redux';
 import { getSavedJobs, addSavedJob, removeSavedJob } from '../../../../modules';
 import { getApplications } from '../../../../modules';
+import { jobApi } from '../../../../../api';
 
 // Tab panel component
 function TabPanel({ children, value, index, ...other }) {
@@ -157,8 +158,38 @@ export default function MyJobs() {
     }, [dispatch]);
 
     const [activeTab, setActiveTab] = useState(0);
-    const [recentViewedJobs] = useState([mockJobs[0]]);
+    const [recentViewedJobs, setRecentViewedJobs] = useState([]);
     const [invitedJobs] = useState([]);
+
+    useEffect(() => {
+        const fetchRecentViewedJobs = async () => {
+            console.log("heheh")
+            try {
+                const raw = localStorage.getItem('recent_job_viewed');
+                const jobIds = raw ? JSON.parse(raw) : [];
+
+                if (!Array.isArray(jobIds) || jobIds.length === 0) return;
+
+                const res = await jobApi.findAllJob({
+                    job_ids: jobIds.join(','),
+                    limit: jobIds.length,
+                });
+
+                const jobs = res?.data ?? [];
+
+                // Sắp xếp lại theo thứ tự trong localStorage
+                const sorted = jobIds
+                    .map((id) => jobs.find((j) => String(j.id) === String(id)))
+                    .filter(Boolean);
+
+                setRecentViewedJobs(sorted);
+            } catch (error) {
+                console.error('Lỗi khi fetch recent viewed jobs:', error);
+            }
+        };
+
+        fetchRecentViewedJobs();
+    }, []);
 
     const mappedSavedJobs = useMemo(() => {
         if (!Array.isArray(savedJobs)) return [];

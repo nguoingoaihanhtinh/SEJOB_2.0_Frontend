@@ -27,6 +27,16 @@ jobApi.getJobById = async (jobId) => {
     }
 }
 
+jobApi.findAllJob = async (params) => {
+    try {
+        const data = await api.get(`/api/jobs`, { params });
+        return _.get(data, 'data');
+    } catch (error) {
+        alert(error?.message || 'Có lỗi xảy ra khi lấy danh sách job');
+        throw error;
+    }
+}
+
 mediaApi.upload = async (formData) => {
     try {
         const data = await api.post(`/api/media/upload`, formData);

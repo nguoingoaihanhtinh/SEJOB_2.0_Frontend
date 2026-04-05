@@ -147,6 +147,27 @@ export default function JobDescription({
  
   useEffect(() => {
     fetchJob();
+
+    if (jobId) {
+      try {
+        const recentJobsRaw = localStorage.getItem("recent_job_viewed");
+        let recentJobs = recentJobsRaw ? JSON.parse(recentJobsRaw) : [];
+
+        if (!Array.isArray(recentJobs)) {
+          recentJobs = [];
+        }
+
+        // Lọc bỏ jobId nếu đã tồn tại để tránh trùng lặp
+        recentJobs = recentJobs.filter((id) => id !== jobId);
+        
+        // Thêm jobId vào đầu mảng
+        recentJobs.unshift(jobId);
+
+        localStorage.setItem("recent_job_viewed", JSON.stringify(recentJobs));
+      } catch (error) {
+        console.error("Lỗi khi lưu recent_job_viewed:", error);
+      }
+    }
   }, [jobId]);
  
   // Show loading state

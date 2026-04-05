@@ -24,7 +24,7 @@ export const addSavedJob = createAsyncThunk(
 export const removeSavedJob = createAsyncThunk(
     "savedJobs/removeSavedJob", async (jobId, { rejectWithValue }) => {
     try {
-        const response = await api.delete(`${apiBaseUrl}/${jobId}/`, { withCredentials: true });
+        const response = await api.delete(`${apiBaseUrl}/${jobId}`, { withCredentials: true });
         return response.data;
     }
 
@@ -79,7 +79,7 @@ const savedJobsSlice = createSlice({
             })
             .addCase(removeSavedJob.fulfilled, (state, action) => {
                 state.status = "succeeded";
-                state.savedJobs = state.savedJobs.filter(job => job.id !== action.meta.arg);
+                state.savedJobs = state.savedJobs.filter(job => job.job_id !== action.meta.arg);
             })
             .addCase(removeSavedJob.rejected, (state, action) => {
                 state.status = "failed";
