@@ -1,5 +1,6 @@
 import { CompanySidebar, TopBar } from "../../components";
 import React from "react";
+import ChatManager from "../../components/chat/ChatManager";
 
 export default function CompanyLayout({ children }) {
   return (
@@ -9,6 +10,7 @@ export default function CompanyLayout({ children }) {
         <TopBar />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
+      <ChatManager />
     </div>
   );
 };

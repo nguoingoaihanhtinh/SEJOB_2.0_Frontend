@@ -4,6 +4,8 @@ import Header from "../Header";
 import Footer from "../Footer";
 import { ChatbotWidget } from "../../components/chatbot";
 
+import ChatManager from "../../components/chat/ChatManager";
+
 export default function MainLayout({ children, maxWidth = false, disableGutters = false }) {
   return (
     <div className="min-h-screen flex flex-col bg-neutral-100">
@@ -22,6 +24,7 @@ export default function MainLayout({ children, maxWidth = false, disableGutters 
       </Box>
       <Footer />
       <ChatbotWidget />
+      <ChatManager />
     </div>
   );
 }

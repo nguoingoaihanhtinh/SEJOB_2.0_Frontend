@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Container } from '@mui/material';
 import { motion } from 'framer-motion';
 import SideBar from '../../../components/common/SideBar';
+import ChatManager from '../../../components/chat/ChatManager';
 
 export default function UserProfileLayout({ children, sidebarProps = {} }) {
   return (
@@ -22,6 +23,7 @@ export default function UserProfileLayout({ children, sidebarProps = {} }) {
           </motion.div>
         </Box>
       </Container>
+      <ChatManager />
     </Box>
   );
 }

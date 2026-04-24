@@ -24,6 +24,7 @@ import recommendationReducer from "./app/modules/services/recommendationService"
 import jobNotificationSubscriptionReducer from "./app/modules/services/jobNotificationSubscription";
 import adminReducer from "./app/modules/services/adminService";
 import chatbotReducer from "./app/modules/services/chatbotService";
+import chatReducer from "./app/modules/services/chatService";
 export default configureStore({
   reducer: {
     auth: authReducer,
@@ -51,5 +52,6 @@ export default configureStore({
     jobNotificationSubscription: jobNotificationSubscriptionReducer,
     admin: adminReducer,
     chatbot: chatbotReducer,
+    chat: chatReducer,
   },
 });

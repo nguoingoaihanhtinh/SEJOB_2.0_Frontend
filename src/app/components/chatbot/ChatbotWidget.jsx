@@ -140,7 +140,7 @@ export default function ChatbotWidget() {
     <>
       {/* Chat Toggle Button */}
       <motion.div
-        className="fixed bottom-6 right-6 z-50"
+        className="fixed top-[40%] right-6 z-50"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -178,11 +178,10 @@ export default function ChatbotWidget() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed bottom-24 right-6 z-50 flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
+            className="fixed top-[10%] right-24 z-50 flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
