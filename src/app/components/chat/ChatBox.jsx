@@ -12,6 +12,7 @@ export default function ChatBox({ chatData }) {
 
   const [inputValue, setInputValue] = useState("");
   const { user: currentUser } = useSelector((state) => state.auth);
+  const { onlineUsers } = useSelector((state) => state.chat);
 
   const { conversationId, participantInfo, isMinimized, messages } = chatData;
 
@@ -93,6 +94,12 @@ export default function ChatBox({ chatData }) {
             <h3 className="font-semibold text-white text-sm">
               {participantInfo.first_name} {participantInfo.last_name}
             </h3>
+            <div className="flex items-center gap-1.5">
+              <div className={`w-2 h-2 rounded-full ${onlineUsers.includes(participantInfo.user_id) ? "bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]" : "bg-gray-400"}`}></div>
+              <span className="text-[10px] text-blue-100 font-medium">
+                {onlineUsers.includes(participantInfo.user_id) ? "Online" : "Offline"}
+              </span>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-1">

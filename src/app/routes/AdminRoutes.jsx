@@ -8,7 +8,8 @@ import {
   StudentDetailPage,
   StudentsPage,
   UsersPage,
-  JobDescriptionAdmin as JobDescription
+  JobDescriptionAdmin as JobDescription,
+  ReviewsPage
 } from "../pages";
 import AdminLayout from "../layouts/AdminLayout";
 import PageNotFound from "@/layouts/PageNotFound";
@@ -30,6 +31,7 @@ export default function AdminRoutes() {
         <Route path="companies/:id" element={<CompanyDetailPage />} />
         <Route path="jobs" element={<JobsPage />} />
         <Route path="job/:id" element={<JobDescription />} />
+        <Route path="reviews" element={<ReviewsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>

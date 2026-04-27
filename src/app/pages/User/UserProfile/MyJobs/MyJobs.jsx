@@ -10,14 +10,21 @@ import {
     Badge,
     Button,
     Paper,
-    Stack
+    Stack,
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    IconButton
 } from '@mui/material';
 import {
     WorkOutline as WorkOutlineIcon,
-    InfoOutlined as InfoIcon
+    InfoOutlined as InfoIcon,
+    Close as CloseIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { JobCardThird } from '../../../../components';
+import ReviewForm from '../../../../components/features/ReviewForm';
+import { createReview } from '../../../../modules/services/reviewService';
 import { mockJobs } from '../../../../../mocks/mockData';
 import { useSelector, useDispatch } from 'react-redux';
 import { getSavedJobs, addSavedJob, removeSavedJob } from '../../../../modules';
@@ -160,6 +167,10 @@ export default function MyJobs() {
     const [activeTab, setActiveTab] = useState(0);
     const [recentViewedJobs, setRecentViewedJobs] = useState([]);
     const [invitedJobs] = useState([]);
+    
+    // Review Dialog State
+    const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+    const [selectedJobForReview, setSelectedJobForReview] = useState(null);
 
     useEffect(() => {
         const fetchRecentViewedJobs = async () => {
@@ -253,6 +264,28 @@ export default function MyJobs() {
         return messages[tabIndex] || t("myJobs.emptyStates.noData");
     };
 
+    const handleOpenReviewDialog = (job) => {
+        setSelectedJobForReview(job);
+        setIsReviewDialogOpen(true);
+    };
+
+    const handleCloseReviewDialog = () => {
+        setIsReviewDialogOpen(false);
+        setSelectedJobForReview(null);
+    };
+
+    const handleReviewSubmit = async (reviewData) => {
+        if (!selectedJobForReview) return;
+        
+        await dispatch(createReview({
+            application_id: selectedJobForReview.id, // In MyJobs appliedJobs, id is the application_id
+            type: "APPLICANT_TO_COMPANY",
+            ...reviewData
+        }));
+        
+        handleCloseReviewDialog();
+    };
+
     const renderTabContent = (tabIndex) => {
         const jobs = getCurrentTabJobs();
 
@@ -283,6 +316,7 @@ export default function MyJobs() {
                                     variant="list"
                                     isBookmarked={tabIndex === 1 || job.isSaved}
                                     onBookmark={handleBookmark}
+                                    onReview={tabIndex === 0 ? handleOpenReviewDialog : null}
                                     cardType={tabIndex === 0 ? 'save' : 'normal'}
                                 />
                             </motion.div>
@@ -502,6 +536,31 @@ export default function MyJobs() {
                     </Box>
                 </Box>
             </Container>
+            
+            {/* Review Dialog */}
+            <Dialog 
+                open={isReviewDialogOpen} 
+                onClose={handleCloseReviewDialog}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: { borderRadius: 3, p: 1 }
+                }}
+            >
+                <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" fontWeight={700}>Review Company</Typography>
+                    <IconButton onClick={handleCloseReviewDialog}>
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent>
+                    <ReviewForm 
+                        onSubmit={handleReviewSubmit}
+                        title={`How was your experience with ${selectedJobForReview?.company?.name || 'this company'}?`}
+                        submitLabel="Submit Feedback"
+                    />
+                </DialogContent>
+            </Dialog>
         </Box>
     );
 }

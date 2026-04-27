@@ -26,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
   Label,
+  Switch,
 } from "@/components/ui";
 import { Pagination } from "antd";
 import { useDispatch, useSelector } from "react-redux";
@@ -56,6 +57,7 @@ export default function UsersPage() {
     last_name: "",
     email: "",
     role: "",
+    is_active: true,
   });
 
   const users = useSelector((state) => state.user.userItems);
@@ -93,6 +95,7 @@ export default function UsersPage() {
       last_name: user.last_name || "",
       email: user.email || "",
       role: user.role || "",
+      is_active: user.is_active !== undefined ? user.is_active : true,
     });
     setIsEditDialogOpen(true);
   };
@@ -372,6 +375,19 @@ export default function UsersPage() {
                     <SelectItem value="Admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <div className="space-y-0.5">
+                  <Label htmlFor="edit-is-active" className="text-base">Account Status</Label>
+                  <p className="text-sm text-gray-500">
+                    {editFormData.is_active ? "User can log in and use the system" : "User is blocked from logging in"}
+                  </p>
+                </div>
+                <Switch
+                  id="edit-is-active"
+                  checked={editFormData.is_active}
+                  onCheckedChange={(checked) => setEditFormData({ ...editFormData, is_active: checked })}
+                />
               </div>
             </div>
           )}

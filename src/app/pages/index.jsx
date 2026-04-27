@@ -37,3 +37,4 @@ export { default as StudentDetailPage } from "./Admin/StudentDetailPage";
 export { default as JobsPage } from "./Admin/JobsPage";
 export { default as SettingsPage } from "./Admin/SettingsPage";
 export { default as JobDescriptionAdmin } from "./Admin/JobDescription";
+export { default as ReviewsPage } from "./Admin/ReviewsPage/ReviewsPage";

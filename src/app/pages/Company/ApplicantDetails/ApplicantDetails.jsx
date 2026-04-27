@@ -8,8 +8,11 @@ import { ApplicationStatus } from "../../../lib/enums";
 import { Spin } from "antd";
 import { LoadingOutlined } from '@ant-design/icons';
 import Sidebar from "./partials/Sidebar";
-import { HiringTab, InterviewScheduleTab, ProfileTab, ResumeTab } from "../../../components/manage/studentInfo";
+import { HiringTab, InterviewScheduleTab, ProfileTab, ResumeTab, PrintableResume, ReviewTab } from "../../../components/manage/studentInfo";
 import AIScoreTab from "./partials/AIScoreTab";
+import { useReactToPrint } from "react-to-print";
+import { useRef } from "react";
+import { Printer } from "lucide-react";
 
 export default function ApplicantDetails() {
   const { t } = useTranslation();
@@ -21,6 +24,12 @@ export default function ApplicantDetails() {
   const { user, status: userStatus } = useSelector((state) => state.user);
   const studentInfo = application?.student ?? user?.student_info?.[0] ?? {};
   const [refreshFlag, setRefreshFlag] = useState(true);
+  const componentRef = useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+    documentTitle: `Resume_${studentInfo.full_name || "Applicant"}`,
+  });
 
   useEffect(() => {
     fetchData();
@@ -71,6 +80,15 @@ export default function ApplicantDetails() {
           <ArrowLeft className="w-6 h-6 cursor-pointer" />
         </button>
         <div className="text-2xl font-bold text-gray-900">{t("applicantDetails.title")}</div>
+        <div className="ml-auto">
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm"
+          >
+            <Printer className="w-4 h-4" />
+            {t("applicantDetails.printResume") || "Print Resume"}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -112,6 +130,12 @@ export default function ApplicantDetails() {
                 >
                   ✨ AI Analysis
                 </button>
+                <button
+                  onClick={() => setActiveTab("review")}
+                  className={`py-4 cursor-pointer font-medium transition-all ${activeTab === "review" ? "text-blue-600" : "text-gray-600 hover:text-gray-900"}`}
+                >
+                  Review Intern
+                </button>
               </div>
             </div>
 
@@ -134,9 +158,18 @@ export default function ApplicantDetails() {
               {activeTab === "ai_score" && (
                 <AIScoreTab application={application} />
               )}
+
+              {activeTab === "review" && (
+                <ReviewTab application={application} />
+              )}
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Hidden Printable Resume */}
+      <div style={{ display: "none" }}>
+        <PrintableResume ref={componentRef} application={application} studentInfo={studentInfo} />
       </div>
     </div>
   );

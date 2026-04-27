@@ -5,6 +5,8 @@ import { getCompany } from '../../../modules/services/companyService';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { CompanyHeader, CompanyInfo, CompanyOverview, OpenJobs } from '../../../components/company';
+import ReviewsList from '../../../components/features/ReviewsList';
+import { fetchPublicReviews } from '../../../modules/services/reviewService';
 
 export default function CompanyDetails() {
     const { t } = useTranslation();
@@ -13,10 +15,12 @@ export default function CompanyDetails() {
     const id = searchParams.get("id");
     const company = useSelector((state) => state.company.company);
     const companyStatus = useSelector((state) => state.company.status);
+    const { publicReviews } = useSelector((state) => state.reviews);
 
     useEffect(() => {
         if (id) {
             dispatch(getCompany(id));
+            dispatch(fetchPublicReviews(id));
         }
     }, [id, dispatch]);
 
@@ -56,6 +60,24 @@ export default function CompanyDetails() {
                 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 3, md: 4 } }} >
                         <CompanyOverview company={company} />
+
+                        {/* Reviews Section */}
+                        <Paper
+                            elevation={0}
+                            sx={{ 
+                                p: { xs: 2, md: 3 },
+                                border: '1px solid', borderColor: 'divider', borderRadius: 2,
+                                display: 'flex', flexDirection: 'column', gap: 3
+                            }}
+                        >
+                            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                                {t('company.reviews.title') || 'Candidate Reviews'}
+                            </Typography>
+                            <ReviewsList 
+                                reviews={publicReviews} 
+                                emptyMessage="No public reviews yet."
+                            />
+                        </Paper>
 
                         <Paper
                             elevation={0}

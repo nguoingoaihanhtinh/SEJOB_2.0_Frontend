@@ -50,9 +50,13 @@ const chatSlice = createSlice({
   initialState: {
     conversationsList: [],
     activeChats: [], // [{ conversationId: Number, participantInfo: Object, isMinimized: boolean, messages: [] }]
+    onlineUsers: [], // [userId]
     status: "idle",
   },
   reducers: {
+    setOnlineUsers: (state, action) => {
+      state.onlineUsers = action.payload;
+    },
     openChatWindow: (state, action) => {
       // action.payload: { conversation, participantInfo }
       const exists = state.activeChats.find((c) => c.conversationId === action.payload.conversation.id);
@@ -122,6 +126,6 @@ const chatSlice = createSlice({
   },
 });
 
-export const { openChatWindow, closeChatWindow, toggleMinimizeChat, receiveMessage } = chatSlice.actions;
+export const { setOnlineUsers, openChatWindow, closeChatWindow, toggleMinimizeChat, receiveMessage } = chatSlice.actions;
 
 export default chatSlice.reducer;
