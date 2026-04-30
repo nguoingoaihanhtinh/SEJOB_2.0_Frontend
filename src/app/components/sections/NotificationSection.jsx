@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Popover, PopoverTrigger, PopoverContent } from "../ui";
-import { Bell, Briefcase, UserCheck, AlertCircle, CheckCheck, ChevronRight, FileText, ClipboardList } from "lucide-react";
+import { Bell, Briefcase, UserCheck, AlertCircle, CheckCheck, ChevronRight, FileText, ClipboardList, Send } from "lucide-react";
 import { useSelector } from "react-redux";
 import { notificationApi } from "../../../api";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import _ from "lodash";
+import { getSocket, initChatSocket } from "../../modules/services/chatSocket";
+
 // ─── Const ──────────────────────────────────────────────────────────────────
 const NOTIFICATION_TYPE = {
   NEW_APPLICATION: "new_application",
   JOB_STATUS_UPDATED: "job_status_updated",
   USER_CREATED: "user_created",
   APPLICATION_STATUS_UPDATED: "application_status_updated",
+  NEW_CHAT_MESSAGE: "new_chat_message",
 }
 
 // ─── Colors ──────────────────────────────────────────────────────────────────
@@ -84,6 +87,15 @@ function getNotifMeta(type) {
         iconColor: "#D97706",
         tagBg: "#FEF3C7",
         tagColor: "#D97706",
+      };
+    case NOTIFICATION_TYPE.NEW_CHAT_MESSAGE:
+      return {
+        icon: <Send size={15} />,
+        label: "Tin nhắn",
+        iconBg: "#F0F9FF",
+        iconColor: "#0369A1",
+        tagBg: "#F0F9FF",
+        tagColor: "#0369A1",
       };
     default:
       return {
@@ -282,10 +294,26 @@ export default function NotificationSection() {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   useEffect(() => {
-    if (open && currentUser?.user_id) {
+    if (currentUser?.user_id) {
       fetchNotifications();
+      
+      const socket = getSocket() || initChatSocket();
+      
+      const handleNewNotification = (notif) => {
+        console.log("🔔 Real-time notification received:", notif);
+        setNotifications(prev => {
+          if (prev.find(n => n.id === notif.id)) return prev;
+          return [notif, ...prev];
+        });
+      };
+
+      socket.on("new_notification", handleNewNotification);
+
+      return () => {
+        socket.off("new_notification", handleNewNotification);
+      };
     }
-  }, [open, currentUser?.user_id]);
+  }, [currentUser?.user_id]);
 
   const fetchNotifications = async () => {
     try {
@@ -309,13 +337,15 @@ export default function NotificationSection() {
   const handleNavigate = (notif) => {
     if (notif.type === NOTIFICATION_TYPE.NEW_APPLICATION && _.get(notif, 'data.application_id')) {
       navigate(`/applicants/${notif.data.application_id}`);
+    } else if (notif.type === NOTIFICATION_TYPE.NEW_CHAT_MESSAGE) {
+      navigate("/chat");
     }
   }
 
   const handleMarkAllRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     notificationApi.markAllAsRead({ receiver_id: currentUser.user_id });
-  }, []);
+  }, [currentUser?.user_id]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -450,47 +480,6 @@ export default function NotificationSection() {
             <EmptyState />
           )}
         </div>
-
-        {/* Footer */}
-        {/* {!loading && notifications.length > 0 && (
-          <div
-            style={{
-              borderTop: `0.5px solid ${C.borderTertiary}`,
-              padding: "10px 16px",
-              textAlign: "center",
-            }}
-          >
-            <button
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "4px",
-                width: "100%",
-                fontSize: "12px",
-                fontWeight: 500,
-                color: C.textSecondary,
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "5px",
-                borderRadius: "6px",
-                transition: "color 0.15s, background 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = C.textPrimary;
-                e.currentTarget.style.background = C.bgSecondary;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = C.textSecondary;
-                e.currentTarget.style.background = "none";
-              }}
-            >
-              Xem tất cả thông báo
-              <ChevronRight size={13} />
-            </button>
-          </div>
-        )} */}
       </PopoverContent>
     </Popover>
   );
