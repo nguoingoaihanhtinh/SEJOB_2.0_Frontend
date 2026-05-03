@@ -6,7 +6,7 @@ import { openChatWindow } from "../../modules/services/chatService";
 
 export default function ChatList({ onClose }) {
   const dispatch = useDispatch();
-  const { conversationsList } = useSelector((state) => state.chat);
+  const { conversationsList, onlineUsers } = useSelector((state) => state.chat);
   const { user: currentUser } = useSelector((state) => state.auth);
   
   const currentUserId = currentUser?.user_id || currentUser?.id;
@@ -88,8 +88,10 @@ export default function ChatList({ onClose }) {
                         </div>
                       )}
                     </div>
-                    {/* Active Status Indicator (Placeholder) */}
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                    {/* Active Status Indicator */}
+                    {onlineUsers.includes(participant?.user_id) && (
+                      <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full shadow-sm animate-pulse-subtle"></div>
+                    )}
                   </div>
                   
                   <div className="flex-1 min-w-0">

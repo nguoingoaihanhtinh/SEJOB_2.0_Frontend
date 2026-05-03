@@ -1,5 +1,6 @@
 import { io } from "socket.io-client";
 import { receiveMessage } from "./chatService";
+import { receiveMessage, setOnlineUsers } from "./chatService";
 import store from "../../../store";
 
 let socket = null;
@@ -17,6 +18,9 @@ export const initChatSocket = () => {
 
   socket.on("connect_error", (err) => {
     console.error("❌ Socket connection error:", err.message);
+  });
+  socket.on("online_users", (userIds) => {
+    store.dispatch(setOnlineUsers(userIds));
   });
 
   socket.on("receive_message", (message) => {

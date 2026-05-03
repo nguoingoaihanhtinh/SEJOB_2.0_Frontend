@@ -5,7 +5,8 @@ import {
   GraduationCap, 
   Building2, 
   Briefcase, 
-  Settings 
+  Settings,
+  Star
 } from 'lucide-react';
 
 const navItems = [
@@ -14,6 +15,7 @@ const navItems = [
   { path: '/students', icon: GraduationCap, label: 'Students' },
   { path: '/companies', icon: Building2, label: 'Companies' },
   { path: '/jobs', icon: Briefcase, label: 'Jobs' },
+  { path: '/reviews', icon: Star, label: 'Reviews' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 

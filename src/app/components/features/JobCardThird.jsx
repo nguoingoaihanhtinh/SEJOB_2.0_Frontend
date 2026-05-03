@@ -8,7 +8,8 @@ import {
     CardContent,
     IconButton,
     Stack,
-    useTheme
+    useTheme,
+    Button
 } from '@mui/material';
 import { BookmarkBorder, Bookmark, CalendarTodayOutlined, DescriptionOutlined } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -130,6 +131,7 @@ export default function JobCard({
     job = {},
     onBookmark,
     onClick,
+    onReview,
     isBookmarked,
     variant = 'grid',
     cardType = 'normal' // 'normal' or 'save'
@@ -630,7 +632,7 @@ export default function JobCard({
                             </Box>
                         </Box>
 
-                        <Stack direction="row" sx={{ flexWrap: 'wrap', rowGap: 1, columnGap: 2, mb: 1 }}>
+                        <Stack direction="row" sx={{ flexWrap: 'wrap', rowGap: 1, columnGap: 2, mb: 1, justifyContent: 'space-between', alignItems: 'center' }}>
                             <Chip
                                 label={jobSalaryDisplay}
                                 size="small"
@@ -647,6 +649,26 @@ export default function JobCard({
                                     }
                                 }}
                             />
+                            {onReview && (
+                                <Button
+                                    size="small"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onReview(job);
+                                    }}
+                                    sx={{
+                                        textTransform: 'none',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 600,
+                                        color: '#1976d2',
+                                        '&:hover': {
+                                            bgcolor: 'rgba(25, 118, 210, 0.04)'
+                                        }
+                                    }}
+                                >
+                                    Review Company
+                                </Button>
+                            )}
                         </Stack>
                     </CardContent>
                 </Card>

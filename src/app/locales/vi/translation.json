@@ -704,6 +704,7 @@
   },
   "applicantDetails": {
     "title": "Chi tiết ứng viên",
+    "printResume": "In hồ sơ",
     "moreAction": "Thêm hành động",
     "appliedJobs": "Việc làm đã ứng tuyển",
     "stage": "Giai đoạn",

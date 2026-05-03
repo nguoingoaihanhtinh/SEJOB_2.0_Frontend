@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { User, X, Minimize2, Maximize2, Send } from "lucide-react";
+import { User, X, Minimize2, Maximize2, Send, Image, Paperclip, Smile } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import EmojiPicker from "emoji-picker-react";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { closeChatWindow, toggleMinimizeChat, fetchMessages } from "../../modules/services/chatService";
 import { sendChatMessage } from "../../modules/services/chatSocket";
 
@@ -11,7 +13,11 @@ export default function ChatBox({ chatData }) {
   const inputRef = useRef(null);
 
   const [inputValue, setInputValue] = useState("");
+  const imageInputRef = useRef(null);
+  const fileInputRef = useRef(null);
+  
   const { user: currentUser } = useSelector((state) => state.auth);
+  const { onlineUsers } = useSelector((state) => state.chat);
 
   const { conversationId, participantInfo, isMinimized, messages } = chatData;
 
@@ -39,21 +45,33 @@ export default function ChatBox({ chatData }) {
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
 
-    // Derived receiverId: use participantInfo.user_id if available,
-    // otherwise fallback to the ID of the participant who is NOT the current user
     const currentUserId = currentUser?.user_id || currentUser?.id;
     const receiverId = participantInfo?.user_id || 
                       (currentUserId === chatData.employerId ? chatData.studentId : chatData.employerId);
 
-    console.log("ChatBox handleSendMessage:", { conversationId, receiverId, currentUserId });
-    
-    if (!receiverId) {
-        console.error("Critical: Could not determine receiver ID", { participantInfo, chatData });
-        return;
-    }
+    if (!receiverId) return;
 
     sendChatMessage(conversationId, receiverId, inputValue);
     setInputValue("");
+  };
+
+  const handleFileSelect = (type) => {
+    if (type === "image") {
+      imageInputRef.current?.click();
+    } else {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const onFileChange = (e, type) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    alert(`Selecting ${type}: ${file.name}. (Feature coming soon!)`);
+    e.target.value = "";
+  };
+
+  const onEmojiClick = (emojiData) => {
+    setInputValue((prev) => prev + emojiData.emoji);
   };
 
   const handleClose = () => {
@@ -93,6 +111,12 @@ export default function ChatBox({ chatData }) {
             <h3 className="font-semibold text-white text-sm">
               {participantInfo.first_name} {participantInfo.last_name}
             </h3>
+            <div className="flex items-center gap-1.5">
+              <div className={`w-2 h-2 rounded-full ${onlineUsers.includes(participantInfo.user_id) ? "bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]" : "bg-gray-400"}`}></div>
+              <span className="text-[10px] text-blue-100 font-medium">
+                {onlineUsers.includes(participantInfo.user_id) ? "Online" : "Offline"}
+              </span>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -151,28 +175,79 @@ export default function ChatBox({ chatData }) {
 
           {/* Input Area */}
           <div className="p-3 bg-white border-t border-gray-100 shrink-0">
-            <div className="flex items-center gap-2">
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                placeholder="Aa"
-                className="flex-1 px-3 py-1.5 bg-gray-100 border-none rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleSendMessage}
-                disabled={!inputValue.trim()}
-                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full transition-colors disabled:text-gray-300 disabled:bg-transparent"
-              >
-                <Send className="w-4 h-4" />
-              </button>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-1 border-b border-gray-50 pb-2 mb-1">
+                <input
+                  type="file"
+                  ref={imageInputRef}
+                  onChange={(e) => onFileChange(e, "image")}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={(e) => onFileChange(e, "file")}
+                  className="hidden"
+                />
+                <button 
+                  onClick={() => handleFileSelect("image")}
+                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" 
+                  title="Send image"
+                >
+                  <Image className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => handleFileSelect("file")}
+                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" 
+                  title="Send file"
+                >
+                  <Paperclip className="w-4 h-4" />
+                </button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button 
+                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" 
+                      title="Emoji"
+                    >
+                      <Smile className="w-4 h-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent side="top" align="start" className="p-0 border-none w-auto z-[110]">
+                    <EmojiPicker 
+                      onEmojiClick={onEmojiClick} 
+                      width={300} 
+                      height={400}
+                      skinTonesDisabled
+                      searchDisabled
+                      previewConfig={{ showPreview: false }}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  placeholder="Type a message..."
+                  className="flex-1 px-3 py-1.5 bg-gray-100 border-none rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!inputValue.trim()}
+                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full transition-colors disabled:text-gray-300 disabled:bg-transparent"
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
         </>

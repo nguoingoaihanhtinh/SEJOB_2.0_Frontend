@@ -705,6 +705,7 @@
   },
   "applicantDetails": {
     "title": "Applicant Details",
+    "printResume": "Print Resume",
     "moreAction": "More Action",
     "appliedJobs": "Applied Jobs",
     "stage": "Stage",
