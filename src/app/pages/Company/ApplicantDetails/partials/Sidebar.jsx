@@ -4,6 +4,8 @@ import { ApplicationStatus, SOCIAL_ICONS } from "../../../../lib/enums";
 import { Avatar } from "@mui/material";
 import StageProgressBar from "./sidebarPartials/stageProgressBar";
 import ChangeStageButton from "./sidebarPartials/ChangeStageButton";
+import { useDispatch } from "react-redux";
+import { openChatWindow, initiateChat } from "../../../../modules/services/chatService";
 
 const formatDaysAgo = (dateString) => {
   if (!dateString) return "";
@@ -22,6 +24,33 @@ const formatDaysAgo = (dateString) => {
 
 export default function Sidebar({ application, studentInfo }) {
   const { t } = useTranslation();
+  const dispatch = useDispatch();
+
+  const handleMessageClick = async () => {
+    try {
+      const sId = studentInfo.user_id || application.user_id;
+      if (!sId) {
+        console.error("No student ID found", { studentInfo, application });
+        return;
+      }
+      const conv = await dispatch(initiateChat({ 
+        studentId: sId, 
+        jobId: application.job_id 
+      })).unwrap();
+      
+      dispatch(openChatWindow({
+        conversation: conv,
+        participantInfo: {
+          user_id: studentInfo.user_id,
+          first_name: application.full_name?.split(" ")[0] || "Applicant",
+          last_name: application.full_name?.split(" ").slice(1).join(" ") || "",
+          avatar: application.avatar,
+        }
+      }));
+    } catch (error) {
+      console.error("Failed to initiate chat", error);
+    }
+  };
 
   const contacts = () => {
     if (!studentInfo.social_links || studentInfo.social_links === undefined || studentInfo.social_links.length === 0)
@@ -100,6 +129,14 @@ export default function Sidebar({ application, studentInfo }) {
         </div>
 
         <ChangeStageButton currentStage={application.status} id={application.id} />
+
+        <button 
+          onClick={handleMessageClick}
+          className="w-full flex items-center justify-center gap-2 mt-4 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors"
+        >
+          <MessageSquare className="w-4 h-4" />
+          Message Applicant
+        </button>
 
         {/* Contact Section */}
         <div className="border-t pt-4">

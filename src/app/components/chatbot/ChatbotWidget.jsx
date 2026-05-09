@@ -140,7 +140,7 @@ export default function ChatbotWidget() {
     <>
       {/* Chat Toggle Button */}
       <motion.div
-        className="fixed bottom-6 right-6 z-50"
+        className="fixed bottom-24 right-6 z-50"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -150,14 +150,17 @@ export default function ChatbotWidget() {
         {!isOpen ? (
           <motion.button
             onClick={toggleChat}
-            className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:shadow-xl"
+            className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:shadow-xl border-4 border-white"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >
-            <MessageCircle className="w-7 h-7" />
+            <Bot className="w-8 h-8" />
             {/* Unread indicator (optional) */}
             {messages.length === 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white" />
+              <span className="absolute top-0 right-0 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-indigo-500 border-2 border-white"></span>
+              </span>
             )}
           </motion.button>
         ) : null}
@@ -178,23 +181,28 @@ export default function ChatbotWidget() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed bottom-24 right-6 z-50 flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
+            drag
+            dragMomentum={false}
+            className="fixed bottom-44 right-6 z-50 flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             style={{
-              width: isMinimized ? "320px" : "380px",
-              height: isMinimized ? "auto" : "600px",
-              maxHeight: "calc(100vh - 150px)",
+              width: isMinimized ? "280px" : "320px",
+              height: isMinimized ? "auto" : "500px",
+              maxHeight: "calc(100vh - 100px)",
+              cursor: "auto"
             }}
           >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 flex items-center justify-between shrink-0">
+            {/* Header / Drag Handle */}
+            <div 
+              className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-3 flex items-center justify-between shrink-0 cursor-move"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
                   <Bot className="w-6 h-6 text-white" />
