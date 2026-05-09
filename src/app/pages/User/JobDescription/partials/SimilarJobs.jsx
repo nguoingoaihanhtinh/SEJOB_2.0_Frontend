@@ -47,17 +47,20 @@ export default function SimilarJobs({ job }) {
     const fetchSimilarJobs = async () => {
       setIsLoading(true);
       try {
+        if (!job.id) {
+          throw new Error("Invalid Job ID");
+        }
         const queryParams = {
           category_ids: categoryIdsString,
           page: 1,
           limit: 8
         };
 
-        const response = await api.get('/api/jobs/merged', { params: queryParams });
+        const response = await api.get(`/api/jobs/recommendation/${job.id}/similar`, { params: queryParams });
         const responseData = response.data.data || {};
         // Merge jobs and topcv into a single array
         const allJobs = [
-          ...(responseData.jobs || []),
+          ...(responseData || []),
           ...(responseData.topcv || [])
         ];
         setSimilarJobs(allJobs);

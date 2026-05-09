@@ -1,5 +1,4 @@
 import { io } from "socket.io-client";
-import { receiveMessage } from "./chatService";
 import { receiveMessage, setOnlineUsers } from "./chatService";
 import store from "../../../store";
 
