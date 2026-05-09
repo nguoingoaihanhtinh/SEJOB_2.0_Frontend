@@ -93,7 +93,7 @@ export const getRecommendedJobsWithTopCV = createAsyncThunk(
                 )
             };
 
-            const response = await api.get(`${apiBaseUrl}/jobs/with-topcv`, {
+            const response = await api.get(`api/jobs/recommendation/me`, {
                 params: queryParams,
             });
             return response.data;
