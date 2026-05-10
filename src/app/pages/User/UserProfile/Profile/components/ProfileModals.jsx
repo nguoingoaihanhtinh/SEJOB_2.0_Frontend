@@ -39,6 +39,7 @@ export const ProfileModals = ({
                 onOpenChange={(open) => open ? openModal('information') : closeModal('information')}
                 initialData={user}
                 onSave={handlers.handleSaveInformation}
+                onAutofill={handlers.handleUploadAndAutofill}
             />
 
             <AboutModal

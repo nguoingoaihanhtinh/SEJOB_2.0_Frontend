@@ -120,11 +120,9 @@ export const useProfileHandlers = ({
             // Lưu filepath cũ trước khi upload (nếu đang update CV)
             let oldFileName = null;
             if (cvId) {
-                const cvToUpdate = cvs.find(cv =>
-                    cv.cvid === cvId || cv.id === cvId || cv.cv_id === cvId
-                );
-                if (cvToUpdate?.filepath) {
-                    oldFileName = extractFileNameFromUrl(cvToUpdate.filepath);
+                const existingCv = cvs.find(cv => (cv.cvid || cv.id || cv.cv_id) === cvId);
+                if (existingCv?.filepath) {
+                    oldFileName = extractFileNameFromUrl(existingCv.filepath);
                 }
             }
 
@@ -133,47 +131,69 @@ export const useProfileHandlers = ({
             formData.append('file', file);
             const uploadResult = await dispatch(uploadMedia(formData)).unwrap();
 
-            if (!uploadResult?.url || !uploadResult?.fileName) {
+            if (!uploadResult?.url || (!uploadResult?.fileName && !uploadResult?.url)) {
                 throw new Error('Upload file thất bại: Không nhận được URL từ server');
             }
 
             const studentInfo = getStudentInfo();
-            const studentId = studentInfo?.id || studentInfo?.student_id;
+            let studentId = studentInfo?.id || studentInfo?.student_id;
 
             if (!studentId) {
-                throw new Error('Không tìm thấy thông tin sinh viên');
+                const updatedUserResult = await dispatch(updateUser({
+                    userId: currentUser.user_id,
+                    userData: {
+                        first_name: currentUser.first_name,
+                        last_name: currentUser.last_name,
+                        student_info: sanitizeStudentInfo(getStudentInfo() || {})
+                    }
+                })).unwrap();
+                
+                const newStudentInfo = Array.isArray(updatedUserResult.data?.student_info) 
+                    ? updatedUserResult.data?.student_info[0] 
+                    : updatedUserResult.data?.student_info;
+                    
+                studentId = newStudentInfo?.id || newStudentInfo?.student_id;
+                
+                if (!studentId) {
+                    throw new Error('Không thể tự động tạo hồ sơ sinh viên. Vui lòng thử lại sau.');
+                }
             }
 
             const cvData = {
                 studentid: studentId,
-                title: file.name.replace('.pdf', '') || 'CV',
+                title: file.name?.replace('.pdf', '') || 'CV',
                 filepath: uploadResult.url,
             };
 
             // Update hoặc create CV
+            let savedCv = null;
             if (cvId) {
-                await dispatch(updateCv({ id: cvId, cvData })).unwrap();
+                const res = await dispatch(updateCv({ id: cvId, cvData })).unwrap();
+                savedCv = res?.data || res;
             } else {
-                await dispatch(createCv(cvData)).unwrap();
+                const res = await dispatch(createCv(cvData)).unwrap();
+                savedCv = res?.created || res?.data || res;
             }
 
             // Xóa file cũ nếu có và khác file mới
             if (oldFileName && uploadResult.fileName && oldFileName !== uploadResult.fileName) {
                 try {
                     await dispatch(deleteMedia(oldFileName)).unwrap();
-                    console.log('Đã xóa file CV cũ:', oldFileName);
-                } catch (fileError) {
-                    console.warn('Không thể xóa file CV cũ (file có thể đã bị xóa trước đó):', fileError);
-                    // Không throw error để không ảnh hưởng đến flow chính
+                } catch (error) {
+                    console.error('Failed to delete old CV file:', error);
                 }
             }
 
             // Refresh danh sách CV
             await dispatch(getCvsByStudentId({ studentId })).unwrap();
+            alert(cvId ? 'Cập nhật CV thành công!' : 'Upload CV thành công!');
+            
+            return savedCv;
         } catch (error) {
             console.error('Error uploading CV:', error);
             const errorMessage = error?.message || error?.payload || 'Có lỗi xảy ra khi upload CV';
             alert(errorMessage);
+            throw error; // Re-throw so callers can handle it
         }
     };
 
@@ -664,6 +684,194 @@ export const useProfileHandlers = ({
         }
     }
 
+    const handleAutofillFromCV = async (cv) => {
+        try {
+            if (!cv?.filepath) {
+                alert('Không tìm thấy file CV để trích xuất dữ liệu');
+                return;
+            }
+
+            const response = await api.post('/api/cvs/extract-data', { fileUrl: cv.filepath });
+            const data = response?.data?.data;
+
+            if (!data) {
+                alert('Không thể trích xuất dữ liệu từ CV');
+                return;
+            }
+
+            console.log('CV extraction result:', data);
+
+            const studentInfo = getStudentInfo() || {};
+            const studentId = studentInfo.id || studentInfo.student_id;
+
+            // Update user info (about, skills, phone, gender, location, dob, desired_positions)
+            let updatedStudentInfo = { ...studentInfo };
+            let hasUserInfoChanges = false;
+
+            if (data.about && typeof data.about === 'string') {
+                updatedStudentInfo.about = data.about;
+                hasUserInfoChanges = true;
+            }
+
+            if (data.phone_number && typeof data.phone_number === 'string' && data.phone_number.trim()) {
+                updatedStudentInfo.phone_number = data.phone_number.trim();
+                hasUserInfoChanges = true;
+            }
+
+            if (data.gender && ['Male', 'Female', 'Other'].includes(data.gender)) {
+                updatedStudentInfo.gender = data.gender;
+                hasUserInfoChanges = true;
+            }
+
+            if (data.location && typeof data.location === 'string' && data.location.trim()) {
+                updatedStudentInfo.location = data.location.trim();
+                hasUserInfoChanges = true;
+            }
+
+            if (data.date_of_birth && typeof data.date_of_birth === 'string') {
+                updatedStudentInfo.date_of_birth = data.date_of_birth;
+                hasUserInfoChanges = true;
+            }
+
+            if (Array.isArray(data.desired_positions) && data.desired_positions.length > 0) {
+                const existingPositions = updatedStudentInfo.desired_positions || [];
+                const mergedPositions = Array.from(new Set([...existingPositions, ...data.desired_positions]));
+                updatedStudentInfo.desired_positions = mergedPositions;
+                hasUserInfoChanges = true;
+            }
+
+            if (Array.isArray(data.skills) && data.skills.length > 0) {
+                const existingSkills = updatedStudentInfo.skills || [];
+                const mergedSkills = Array.from(new Set([...existingSkills, ...data.skills]));
+                updatedStudentInfo.skills = mergedSkills;
+                hasUserInfoChanges = true;
+            }
+
+            if (hasUserInfoChanges && currentUser?.user_id) {
+                // Also update first_name/last_name if available from current user
+                await dispatch(updateUser({
+                    userId: currentUser.user_id,
+                    userData: {
+                        first_name: currentUser.first_name,
+                        last_name: currentUser.last_name,
+                        student_info: sanitizeStudentInfo(updatedStudentInfo)
+                    }
+                })).unwrap();
+                console.log('Updated user info with:', {
+                    phone: data.phone_number,
+                    gender: data.gender,
+                    location: data.location,
+                    dob: data.date_of_birth,
+                    skills_count: data.skills?.length,
+                    desired_positions: data.desired_positions,
+                });
+            }
+
+            // Create Experiences
+            if (Array.isArray(data.experiences) && data.experiences.length > 0) {
+                console.log(`Creating ${data.experiences.length} experience(s)...`);
+                for (const exp of data.experiences) {
+                    if (exp.company || exp.position) {
+                        const startDate = exp.start_date || `${new Date().getFullYear()}-01-01`;
+                        const experienceData = {
+                            position: exp.position || '',
+                            title: exp.position || '',
+                            student_id: studentId,
+                            company: exp.company || '',
+                            location: exp.location || '',
+                            start_date: startDate,
+                            end_date: exp.is_current ? null : (exp.end_date || null),
+                            is_current: exp.is_current || false,
+                            description: exp.description || '',
+                        };
+                        try { await dispatch(createExperience(experienceData)).unwrap(); } catch (e) { console.error('Error adding experience', e); }
+                    }
+                }
+            }
+
+            // Create Educations
+            if (Array.isArray(data.educations) && data.educations.length > 0) {
+                console.log(`Creating ${data.educations.length} education(s)...`);
+                for (const edu of data.educations) {
+                    // Support both field name variants from AI
+                    const school = edu.school || edu.institution_name;
+                    if (school) {
+                        const startDate = edu.start_date || `${new Date().getFullYear()}-01-01`;
+                        const educationData = {
+                            student_id: studentId,
+                            school: school,
+                            degree: edu.degree || '',
+                            major: edu.major || edu.field_of_study || '',
+                            start_date: startDate,
+                            end_date: edu.end_date || null,
+                            description: '',
+                        };
+                        try { await dispatch(createEducation(educationData)).unwrap(); } catch (e) { console.error('Error adding education', e); }
+                    }
+                }
+            }
+
+            // Create Projects
+            if (Array.isArray(data.projects) && data.projects.length > 0) {
+                console.log(`Creating ${data.projects.length} project(s)...`);
+                for (const proj of data.projects) {
+                    if (proj.projectName) {
+                        const projectData = {
+                            studentId: studentId,
+                            projectName: proj.projectName,
+                            isCurrentlyWorking: proj.isCurrentlyWorking || false,
+                            startMonth: proj.startMonth || 1,
+                            startYear: proj.startYear || new Date().getFullYear(),
+                            endMonth: proj.endMonth || null,
+                            endYear: proj.endYear || null,
+                            description: proj.description || '',
+                            websiteLink: proj.websiteLink || proj.website_link || ''
+                        };
+                        const transformedData = transformProjectToAPI(projectData);
+                        try { await dispatch(createProject(transformedData)).unwrap(); } catch (e) { console.error('Error adding project', e); }
+                    }
+                }
+            }
+
+            // Create Certificates
+            if (Array.isArray(data.certifications) && data.certifications.length > 0) {
+                console.log(`Creating ${data.certifications.length} certification(s)...`);
+                for (const cert of data.certifications) {
+                    if (cert.name) {
+                        const certData = {
+                            student_id: studentId,
+                            name: cert.name,
+                            organization: cert.organization || '',
+                            issue_date: cert.issue_date || null,
+                            certification_url: cert.certification_url || '',
+                            description: ''
+                        };
+                        try { await dispatch(createCertificate(certData)).unwrap(); } catch (e) { console.error('Error adding certificate', e); }
+                    }
+                }
+            }
+
+            await dispatch(getMe()).unwrap();
+            alert('Tự động điền dữ liệu từ CV thành công!');
+        } catch (error) {
+            console.error('Error auto-filling from CV:', error);
+            alert(error?.message || 'Có lỗi xảy ra khi tự động điền dữ liệu');
+            throw error;
+        }
+    };
+
+    const handleUploadAndAutofill = async (file) => {
+        try {
+            const savedCv = await handleCVFileChange(file);
+            if (savedCv) {
+                await handleAutofillFromCV(savedCv);
+            }
+        } catch (error) {
+            console.error('Error in handleUploadAndAutofill:', error);
+            // Alert is already handled by handleCVFileChange and handleAutofillFromCV
+        }
+    };
+
     return {
         handleCVFileChange,
         handleDeleteCV,
@@ -687,5 +895,7 @@ export const useProfileHandlers = ({
         handleUpdateSocialLink,
         handleDeleteSocialLink,
         handleCreateSocialLink,
+        handleAutofillFromCV,
+        handleUploadAndAutofill
     };
 };

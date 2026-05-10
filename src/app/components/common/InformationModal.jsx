@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
     Input,
     Button,
@@ -11,7 +11,10 @@ import { useSelector, useDispatch } from "react-redux";
 import { getProvinces } from "../../modules/services/addressService";
 import { mapGenderFromBackend } from "../../pages/User/UserProfile/Profile/hooks/utils";
 
-export default function InformationModal({ open, onOpenChange, initialData, onSave }) {
+import { CircularProgress } from "@mui/material";
+import { AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
+
+export default function InformationModal({ open, onOpenChange, initialData, onSave, onAutofill }) {
     const dispatch = useDispatch();
     const provincesRaw = useSelector((state) => state.address?.provinces?.data || state.address?.provinces || []);
     const provinces = Array.isArray(provincesRaw) ? provincesRaw : [];
@@ -60,6 +63,9 @@ export default function InformationModal({ open, onOpenChange, initialData, onSa
         gender: mapGenderFromBackend(initialData?.gender),
         province: initialData?.province || initialData?.location || "",
     });
+
+    const fileInputRef = useRef(null);
+    const [isExtracting, setIsExtracting] = useState(false);
 
     // Update form data when initialData changes
     useEffect(() => {
@@ -111,11 +117,11 @@ export default function InformationModal({ open, onOpenChange, initialData, onSa
         // Split full name into first_name and last_name
         const fullNameTrimmed = (formData.fullName || '').trim();
         const nameParts = fullNameTrimmed.split(' ').filter(part => part.length > 0);
-        
+
         // Ensure we have both first_name and last_name
         let lastName = '';
         let firstName = '';
-        
+
         if (nameParts.length === 1) {
             // If only one part, use it as last_name and set first_name to it
             lastName = nameParts[0];
@@ -145,6 +151,44 @@ export default function InformationModal({ open, onOpenChange, initialData, onSa
 
     const handleCancel = () => {
         onOpenChange(false);
+    };
+
+    const handleAutofillClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.type !== 'application/pdf') {
+            alert('Vui lòng chọn file PDF');
+            return;
+        }
+
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('File quá lớn. Vui lòng chọn file nhỏ hơn 5MB');
+            return;
+        }
+
+        if (onAutofill) {
+            setIsExtracting(true);
+            try {
+                await onAutofill(file);
+                // Optionally close modal if autofill succeeds, or let user see background change
+                // onOpenChange(false);
+            } finally {
+                setIsExtracting(false);
+            }
+        }
+
+        // Reset file input
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
 
     const handleEditAvatar = () => {
@@ -393,22 +437,42 @@ export default function InformationModal({ open, onOpenChange, initialData, onSa
                     </div>
 
                     {/* Footer Buttons */}
-                    <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-neutrals-20">
-                        <Button
-                            type="button"
-                            onClick={handleCancel}
-                            variant="outline"
-                            className="h-12 px-6 bg-white border border-neutrals-40 text-foreground hover:bg-neutrals-10 hover:border-neutrals-40"
-                        >
-                            Huỷ
-                        </Button>
-                        <Button
-                            type="button"
-                            onClick={handleSave}
-                            className="h-12 px-6 bg-primary hover:bg-primary/90 text-white font-medium"
-                        >
-                            Lưu
-                        </Button>
+                    <div className="flex justify-between items-center mt-6 pt-6 border-t border-neutrals-20">
+                        <div>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                style={{ display: 'none' }}
+                                accept="application/pdf"
+                                onChange={handleFileChange}
+                            />
+                            <Button
+                                type="button"
+                                onClick={handleAutofillClick}
+                                disabled={isExtracting}
+                                className="h-12 px-6 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-medium flex items-center gap-2 shadow-sm transition-all"
+                            >
+                                {isExtracting ? <CircularProgress size={20} color="inherit" /> : <AutoAwesomeIcon fontSize="small" />}
+                                Tự động điền từ CV
+                            </Button>
+                        </div>
+                        <div className="flex gap-3">
+                            <Button
+                                type="button"
+                                onClick={handleCancel}
+                                variant="outline"
+                                className="h-12 px-6 bg-white border border-neutrals-40 text-foreground hover:bg-neutrals-10 hover:border-neutrals-40"
+                            >
+                                Huỷ
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleSave}
+                                className="h-12 px-6 bg-primary hover:bg-primary/90 text-white font-medium"
+                            >
+                                Lưu
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </DialogContent>
