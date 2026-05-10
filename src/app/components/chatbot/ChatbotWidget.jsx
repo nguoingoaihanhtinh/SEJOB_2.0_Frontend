@@ -140,7 +140,7 @@ export default function ChatbotWidget() {
     <>
       {/* Chat Toggle Button */}
       <motion.div
-        className="fixed bottom-24 right-6 z-50"
+        className="fixed bottom-4 left-6 z-50 flex items-end"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -172,10 +172,10 @@ export default function ChatbotWidget() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="absolute bottom-full right-0 mb-2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap shadow-lg"
+              className="absolute bottom-full left-0 mb-2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap shadow-lg"
             >
               Chat with SEBot
-              <div className="absolute bottom-0 right-3 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900" />
+              <div className="absolute bottom-0 left-3 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -186,7 +186,7 @@ export default function ChatbotWidget() {
           <motion.div
             drag
             dragMomentum={false}
-            className="fixed bottom-44 right-6 z-50 flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
+            className="fixed bottom-24 left-6 z-50 flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}

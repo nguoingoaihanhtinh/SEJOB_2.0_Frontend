@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { User, X, Minimize2, Maximize2, Send, Image, Paperclip, Smile } from "lucide-react";
+import { User, X, Minimize2, Maximize2, Send, Image, Paperclip, Smile, Minus, Reply, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EmojiPicker from "emoji-picker-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -13,6 +13,7 @@ export default function ChatBox({ chatData }) {
   const inputRef = useRef(null);
 
   const [inputValue, setInputValue] = useState("");
+  const [replyingTo, setReplyingTo] = useState(null);
   const imageInputRef = useRef(null);
   const fileInputRef = useRef(null);
   
@@ -51,8 +52,14 @@ export default function ChatBox({ chatData }) {
 
     if (!receiverId) return;
 
-    sendChatMessage(conversationId, receiverId, inputValue);
+    let finalMessage = inputValue;
+    if (replyingTo) {
+      finalMessage = `---REPLY---${replyingTo.content}---END_REPLY---${inputValue}`;
+    }
+
+    sendChatMessage(conversationId, receiverId, finalMessage);
     setInputValue("");
+    setReplyingTo(null);
   };
 
   const handleFileSelect = (type) => {
@@ -121,6 +128,13 @@ export default function ChatBox({ chatData }) {
         </div>
         <div className="flex items-center gap-1">
           <button
+            onClick={(e) => { e.stopPropagation(); handleMinimize(); }}
+            className="p-1 hover:bg-white/20 rounded transition-colors text-white"
+            title={isMinimized ? "Expand" : "Minimize"}
+          >
+            {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
+          </button>
+          <button
             onClick={(e) => { e.stopPropagation(); handleClose(); }}
             className="p-1 hover:bg-white/20 rounded transition-colors text-white"
             title="Close"
@@ -141,32 +155,80 @@ export default function ChatBox({ chatData }) {
             ) : (
               messages.map((msg, index) => {
                 const isMine = msg.sender_id === (currentUser?.user_id || currentUser?.id);
+                const msgDate = new Date(msg.created_at || Date.now());
+                const dateString = msgDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+                
+                let showDate = false;
+                if (index === 0) {
+                  showDate = true;
+                } else {
+                  const prevMsgDate = new Date(messages[index - 1].created_at || Date.now());
+                  if (msgDate.toDateString() !== prevMsgDate.toDateString()) {
+                    showDate = true;
+                  }
+                }
+
+                let displayContent = msg.content;
+                let replyContent = null;
+                if (msg.content && msg.content.includes("---REPLY---")) {
+                  const match = msg.content.match(/---REPLY---(.*?)---END_REPLY---(.*)/s);
+                  if (match) {
+                    replyContent = match[1];
+                    displayContent = match[2];
+                  }
+                }
+
                 return (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`flex items-start gap-2 ${isMine ? "flex-row-reverse" : ""}`}
-                  >
-                    {!isMine && (
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 bg-blue-100 overflow-hidden mt-1">
-                         {participantInfo.avatar ? (
-                          <img src={participantInfo.avatar} alt="avatar" className="w-full h-full object-cover" />
-                        ) : (
-                          <User className="w-3 h-3 text-blue-600" />
-                        )}
+                  <React.Fragment key={index}>
+                    {showDate && (
+                      <div className="flex justify-center my-3">
+                        <span className="text-[10px] bg-gray-200/60 text-gray-500 px-2.5 py-1 rounded-full font-medium">
+                          {dateString}
+                        </span>
                       </div>
                     )}
-                    <div
-                      className={`max-w-[80%] rounded-2xl p-2.5 shadow-sm text-sm ${
-                        isMine
-                          ? "bg-blue-600 text-white rounded-tr-sm"
-                          : "bg-white text-gray-800 border border-gray-100 rounded-tl-sm"
-                      }`}
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`flex items-start gap-2 group ${isMine ? "flex-row-reverse" : ""}`}
                     >
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
-                    </div>
-                  </motion.div>
+                      {!isMine && (
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 bg-blue-100 overflow-hidden mt-1">
+                           {participantInfo.avatar ? (
+                            <img src={participantInfo.avatar} alt="avatar" className="w-full h-full object-cover" />
+                          ) : (
+                            <User className="w-3 h-3 text-blue-600" />
+                          )}
+                        </div>
+                      )}
+                      <div className={`relative flex items-center gap-2 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
+                        <div className="relative">
+                          <div
+                            className={`max-w-[200px] rounded-2xl p-2.5 shadow-sm text-sm ${
+                              isMine
+                                ? "bg-blue-600 text-white rounded-tr-sm"
+                                : "bg-white text-gray-800 border border-gray-100 rounded-tl-sm"
+                            }`}
+                          >
+                            {replyContent && (
+                              <div className={`mb-1.5 p-1.5 rounded text-xs border-l-2 ${isMine ? "bg-blue-700/50 border-blue-300 text-blue-100" : "bg-gray-100 border-gray-300 text-gray-500"}`}>
+                                <span className="block font-semibold mb-0.5">{isMine ? "You" : participantInfo.first_name}</span>
+                                <p className="truncate">{replyContent}</p>
+                              </div>
+                            )}
+                            <p className="whitespace-pre-wrap break-words">{displayContent}</p>
+                          </div>
+                        </div>
+
+                        {/* Hover Actions */}
+                        <div className={`opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ${isMine ? "flex-row-reverse" : ""}`}>
+                          <button onClick={() => setReplyingTo({ id: msg.id, content: displayContent })} className="p-1 text-gray-400 hover:text-blue-500 hover:bg-gray-100 rounded-full transition-colors" title="Reply">
+                            <Reply className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </React.Fragment>
                 );
               })
             )}
@@ -175,6 +237,17 @@ export default function ChatBox({ chatData }) {
 
           {/* Input Area */}
           <div className="p-3 bg-white border-t border-gray-100 shrink-0">
+            {replyingTo && (
+              <div className="flex items-center justify-between bg-blue-50/50 p-2 rounded-t-lg border-l-2 border-blue-500 mb-2">
+                <div className="flex flex-col overflow-hidden mr-2">
+                  <span className="text-xs font-semibold text-blue-600">Replying to message</span>
+                  <span className="text-xs text-gray-500 truncate">{replyingTo.content}</span>
+                </div>
+                <button onClick={() => setReplyingTo(null)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1 border-b border-gray-50 pb-2 mb-1">
                 <input

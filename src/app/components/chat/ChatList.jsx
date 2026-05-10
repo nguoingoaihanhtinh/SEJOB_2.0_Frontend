@@ -28,7 +28,7 @@ export default function ChatList({ onClose }) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 20 }}
       className="bg-white rounded-t-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden pointer-events-auto"
-      style={{ width: "350px", height: "500px" }}
+      style={{ width: "300px", height: "580px" }}
     >
       {/* Header */}
       <div className="p-4 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-between text-white shrink-0">

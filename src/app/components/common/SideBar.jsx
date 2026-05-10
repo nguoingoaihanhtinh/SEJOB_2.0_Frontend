@@ -176,5 +176,5 @@ export default function ProfileSidebar({ user }) {
 
 // Keep the old component for backward compatibility
 export function DefaultSidebar() {
-    return <ProfileSidebar user={{ name: currentUser?.name || 'User' }} />; ``
+    return <ProfileSidebar />;
 }
