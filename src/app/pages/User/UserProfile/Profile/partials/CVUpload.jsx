@@ -10,11 +10,12 @@ import {
   Check as CheckIcon,
   Close as CloseIcon,
   Download as DownloadIcon,
-  MoreVert as MoreVertIcon
+  MoreVert as MoreVertIcon,
+  AutoAwesome as AutoAwesomeIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 
-export default function CVUpload({ cvs = [], onFileChange, onDelete, onView, onUpdateTitle }) {
+export default function CVUpload({ cvs = [], onFileChange, onDelete, onView, onUpdateTitle, onAutofill }) {
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -23,6 +24,7 @@ export default function CVUpload({ cvs = [], onFileChange, onDelete, onView, onU
   const [editingTitle, setEditingTitle] = useState('');
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [selectedCv, setSelectedCv] = useState(null);
+  const [isExtracting, setIsExtracting] = useState(false);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -269,6 +271,24 @@ export default function CVUpload({ cvs = [], onFileChange, onDelete, onView, onU
                   >
                     <DownloadIcon fontSize="small" />
                   </IconButton>
+                  {onAutofill && (
+                    <IconButton
+                      onClick={async () => {
+                        setIsExtracting(true);
+                        try {
+                          await onAutofill(cv);
+                        } finally {
+                          setIsExtracting(false);
+                        }
+                      }}
+                      size="small"
+                      color="primary"
+                      title="Tự động điền từ CV"
+                      disabled={isExtracting}
+                    >
+                      <AutoAwesomeIcon fontSize="small" />
+                    </IconButton>
+                  )}
                   <IconButton
                     onClick={(e) => handleMenuOpen(e, cv)}
                     size="small"
@@ -319,6 +339,24 @@ export default function CVUpload({ cvs = [], onFileChange, onDelete, onView, onU
         >
           <EditIcon sx={{ mr: 1, fontSize: 18 }} />
           {t("profile.replace_file")}
+        </MenuItem>
+        <MenuItem
+          onClick={async () => {
+            if (onAutofill) {
+              setIsExtracting(true);
+              try {
+                await onAutofill(selectedCv);
+              } finally {
+                setIsExtracting(false);
+              }
+            }
+            handleMenuClose();
+          }}
+          disabled={isExtracting}
+          sx={{ color: 'primary.main' }}
+        >
+          <AutoAwesomeIcon sx={{ mr: 1, fontSize: 18 }} />
+          {isExtracting ? 'Đang trích xuất...' : 'Tự động điền từ CV'}
         </MenuItem>
         <MenuItem
           onClick={() => {
