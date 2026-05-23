@@ -171,6 +171,7 @@ export default function Profile() {
                                 onDelete={handlers.handleDeleteCV}
                                 onView={handlers.handleViewCV}
                                 onUpdateTitle={handlers.handleUpdateCVTitle}
+                                onAutofill={handlers.handleAutofillFromCV}
                             />
                         </motion.div>
 

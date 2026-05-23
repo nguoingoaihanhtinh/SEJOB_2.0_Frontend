@@ -160,7 +160,11 @@ const cvSlice = createSlice({
             })
             .addCase(createCv.fulfilled, (state, action) => {
                 state.status = "succeeded";
-                state.cvs.push(action.payload.data);
+                if (action.payload.created) {
+                    state.cvs.push(action.payload.created);
+                } else if (action.payload.data) {
+                    state.cvs.push(action.payload.data);
+                }
             })
             .addCase(createCv.rejected, (state, action) => {
                 state.status = "failed";
@@ -172,8 +176,8 @@ const cvSlice = createSlice({
             })
             .addCase(updateCv.fulfilled, (state, action) => {
                 state.status = "succeeded";
-                const index = state.cvs.findIndex(cv => cv.id === action.payload.data.id);
-                if (index !== -1) {
+                const index = state.cvs.findIndex(cv => cv.id === action.payload.data?.id);
+                if (index !== -1 && action.payload.data) {
                     state.cvs[index] = action.payload.data;
                 }
             })
