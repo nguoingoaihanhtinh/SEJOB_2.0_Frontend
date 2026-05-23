@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo, useCallback } from "react";
 import { Plus, Search, Filter, MoreVertical, Edit, Trash2 } from "lucide-react";
 import {
   Button,
-  Input,
   Badge,
   Table,
   TableBody,
@@ -20,28 +19,32 @@ import {
   SelectTrigger,
   SelectValue,
   Dialog,
-  DialogContent,
+  DialogContent, DialogTitle,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
   Label,
   Switch,
 } from "@/components/ui";
 import { Pagination } from "antd";
-import { useDispatch, useSelector } from "react-redux";
-import { getUsers, createUser, updateUser } from "../../../modules/services/userService";
+import { createUser, updateUser } from "../../../modules/services/userService";
 import { Avatar } from "@mui/material";
+import { userApi, parseErrorMessage } from "../../../../api";
+import SearchInput from "../../../components/common/InputV2";
+import SkeletonPulse from "../../../components/common/SkeletonPulse";
 
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const dispatch = useDispatch();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingUpdate, setIsLoadingUpdate] = useState(false);
+  const [isLoadingCreate, setIsLoadingCreate] = useState(false);
 
   // Form states
   const [addFormData, setAddFormData] = useState({
@@ -60,33 +63,73 @@ export default function UsersPage() {
     is_active: true,
   });
 
-  const users = useSelector((state) => state.user.userItems);
-  const pagination = useSelector((state) => state.user.pagination);
-  const userStatus = useSelector((state) => state.user.status);
+  const [users, setUsers] = useState([]);
+  const [pagination, setPagination] = useState({});
+  const [userStatus, setUserStatus] = useState("");
+
+  const getUsers = async () => {
+    setIsLoading(true);
+    try {
+      const res = await userApi.getUsers({ page: currentPage, limit: pageSize, email: searchQuery, roles: roleFilter });
+      setUsers(res.data);
+      setPagination(res.pagination);
+      setUserStatus(res.status);
+    } catch (error) {
+      console.error("Failed to get users:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    dispatch(getUsers({ page: currentPage, limit: pageSize }));
-  }, [currentPage, pageSize, dispatch]);
+    getUsers();
+  }, [currentPage, pageSize, searchQuery, roleFilter]);
 
   const handleAddUser = async () => {
     try {
-      await dispatch(createUser(addFormData)).unwrap();
+      setIsLoadingCreate(true);
+      await userApi.createUser(addFormData);
+      await getUsers();
       setIsAddDialogOpen(false);
       setAddFormData({ first_name: "", last_name: "", email: "", role: "", password: "" });
     } catch (error) {
-      console.error("Failed to create user:", error);
+      const errorMessage = parseErrorMessage(error.response.data);
+      window.alert(errorMessage);
+    }
+    finally{
+      setIsLoadingCreate(false);
     }
   };
 
   const handleUpdateUser = async () => {
     try {
-      await dispatch(updateUser({ userId: selectedUser.id, userData: editFormData })).unwrap();
+      setIsLoadingUpdate(true);
+      await userApi.updateUser(selectedUser.user_id, editFormData);
+      await getUsers();
       setIsEditDialogOpen(false);
       setSelectedUser(null);
     } catch (error) {
       console.error("Failed to update user:", error);
     }
+    finally{
+      setIsLoadingUpdate(false);
+    }
   };
+
+  const handleDeleteUser = async () => {
+    try {
+      setIsLoadingUpdate(true);
+      await userApi.deleteUser(selectedUser.user_id);
+      await getUsers();
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      const errorMessage = parseErrorMessage(error.response.data);
+      window.alert(errorMessage);
+    }
+    finally{
+      setIsLoadingUpdate(false);
+    }
+  }
 
   const openEditDialog = (user) => {
     setSelectedUser(user);
@@ -98,6 +141,11 @@ export default function UsersPage() {
       is_active: user.is_active !== undefined ? user.is_active : true,
     });
     setIsEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (user) => {
+    setSelectedUser(user);
+    setIsDeleteDialogOpen(true);
   };
 
   const getRoleBadgeColor = (role) => {
@@ -118,10 +166,7 @@ export default function UsersPage() {
           <h3 className="text-gray-900 mb-1 font-semibold">User Management</h3>
           <p className="text-gray-600">Manage all system users and their roles</p>
         </div>
-        <Button
-          onClick={() => setIsAddDialogOpen(true)}
-          className="bg-primary/90 hover:bg-primary text-white hover:scale-105 rounded-lg transition-all"
-        >
+        <Button onClick={() => setIsAddDialogOpen(true)} className="cursor-pointer bg-primary/90 hover:bg-primary text-white hover:scale-105 rounded-lg transition-all">
           <Plus className="w-4 h-4" />
           Add User
         </Button>
@@ -131,12 +176,11 @@ export default function UsersPage() {
         <div className="px-4 py-2 border-b border-gray-200">
           <div className="flex items-center gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search users..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+              <SearchInput
+                placeholder="Search on email"
+                onChange={(value) => {
+                  setSearchQuery(value);
+                }}
               />
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
@@ -145,9 +189,9 @@ export default function UsersPage() {
                 <SelectValue placeholder="Filter by role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value={null}>All Roles</SelectItem>
                 <SelectItem value="Student">Student</SelectItem>
-                <SelectItem value="Company">Company</SelectItem>
+                <SelectItem value="Employer">Company</SelectItem>
                 <SelectItem value="Manager">Manager</SelectItem>
                 <SelectItem value="Admin">Admin</SelectItem>
               </SelectContent>
@@ -168,61 +212,85 @@ export default function UsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Avatar
-                        alt={`${user.first_name} ${user.last_name}`}
-                        sx={{ width: 32, height: 32, fontSize: "0.875rem" }}
-                        src={user.avatar}
-                        className="bg-linear-to-br from-blue-500 to-purple-500"
-                      >
-                        {user.first_name[0]}
-                        {user.last_name[0]}
-                      </Avatar>
-                      <span>
-                        {user.first_name} {user.last_name}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-gray-600">{user.email}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="secondary" className={getRoleBadgeColor(user.role) + " px-4 py-1"}>
-                      {user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge
-                      className={`${user.is_active ? "bg-green-500 text-white border-2 border-accent-green/50 hover:bg-green-500" : "bg-gray-100"} px-4 py-1`}
-                    >
-                      {user.is_active ? "Active" : "Inactive"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-gray-600 text-center">
-                    {new Date(user.created_at).toLocaleDateString("en-GB")}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="bg-white" align="end">
-                        <DropdownMenuItem onClick={() => openEditDialog(user)}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {isLoading
+                ? Array.from({ length: 10 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <SkeletonPulse className="w-8 h-8 rounded-full" />
+                          <SkeletonPulse className="h-4 w-32" />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <SkeletonPulse className="h-4 w-48" />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <SkeletonPulse className="h-6 w-16 rounded-full mx-auto" />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <SkeletonPulse className="h-6 w-16 rounded-full mx-auto" />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <SkeletonPulse className="h-4 w-24 mx-auto" />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <SkeletonPulse className="h-8 w-8 rounded-md ml-auto" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : users.map((user) => (
+                    <TableRow key={user.user_id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar
+                            alt={`${user.first_name} ${user.last_name}`}
+                            sx={{ width: 32, height: 32, fontSize: "0.875rem" }}
+                            src={user.avatar}
+                            className="bg-linear-to-br from-blue-500 to-purple-500"
+                          >
+                            {user.first_name[0]}
+                            {user.last_name[0]}
+                          </Avatar>
+                          <span>
+                            {user.first_name} {user.last_name}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-gray-600">{user.email}</TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="secondary" className={getRoleBadgeColor(user.role) + " px-4 py-1"}>
+                          {user.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge
+                          className={`${user.is_active ? "bg-green-500 text-white border-2 border-accent-green/50 hover:bg-green-500" : "bg-gray-100"} px-4 py-1`}
+                        >
+                          {user.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-gray-600 text-center">{new Date(user.created_at).toLocaleDateString("en-GB")}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="bg-white" align="end">
+                            <DropdownMenuItem onClick={() => openEditDialog(user)}>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            {user.is_active && <DropdownMenuItem onClick={() => openDeleteDialog(user)} className="text-red-600">
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
             </TableBody>
           </Table>
         </div>
@@ -242,46 +310,43 @@ export default function UsersPage() {
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <h3 className="font-semibold">Add New User</h3>
+            <DialogTitle>Add New User</DialogTitle>
             <DialogDescription>Create a new user account in the system.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="first-name">First Name</Label>
-                <Input
+                <SearchInput
                   id="first-name"
                   placeholder="John"
                   value={addFormData.first_name}
-                  onChange={(e) => setAddFormData({ ...addFormData, first_name: e.target.value })}
+                  onChange={(val) => setAddFormData({ ...addFormData, first_name: val })}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="last-name">Last Name</Label>
-                <Input
+                <SearchInput
                   id="last-name"
                   placeholder="Doe"
                   value={addFormData.last_name}
-                  onChange={(e) => setAddFormData({ ...addFormData, last_name: e.target.value })}
+                  onChange={(val) => setAddFormData({ ...addFormData, last_name: val })}
                 />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
+              <SearchInput
                 id="email"
                 type="email"
                 placeholder="john.doe@university.edu"
                 value={addFormData.email}
-                onChange={(e) => setAddFormData({ ...addFormData, email: e.target.value })}
+                onChange={(val) => setAddFormData({ ...addFormData, email: val })}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
-              <Select
-                value={addFormData.role}
-                onValueChange={(value) => setAddFormData({ ...addFormData, role: value })}
-              >
+              <Select value={addFormData.role} onValueChange={(value) => setAddFormData({ ...addFormData, role: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
@@ -295,29 +360,29 @@ export default function UsersPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
+              <SearchInput
                 id="password"
                 type="password"
                 value={addFormData.password}
-                onChange={(e) => setAddFormData({ ...addFormData, password: e.target.value })}
+                onChange={(val) => setAddFormData({ ...addFormData, password: val })}
               />
             </div>
           </div>
           <DialogFooter>
             <Button
-              className="hover:scale-105 rounded-lg transition-all"
+              className="cursor-pointer hover:scale-105 rounded-lg transition-all"
               variant="outline"
               onClick={() => setIsAddDialogOpen(false)}
-              disabled={userStatus === "loading"}
+              disabled={isLoadingCreate}
             >
               Cancel
             </Button>
             <Button
-              className="bg-primary/90 hover:bg-primary text-white hover:scale-105 rounded-lg transition-all"
+              className="cursor-pointer bg-primary/90 hover:bg-primary text-white hover:scale-105 rounded-lg transition-all"
               onClick={handleAddUser}
-              disabled={userStatus === "loading"}
+              disabled={isLoadingCreate}
             >
-              {userStatus === "loading" ? "Creating..." : "Create User"}
+              {isLoadingCreate ? "Creating..." : "Create User"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -327,7 +392,7 @@ export default function UsersPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <h3 className="font-semibold">Edit User</h3>
+            <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>Update user information.</DialogDescription>
           </DialogHeader>
           {selectedUser && (
@@ -335,36 +400,33 @@ export default function UsersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-first-name">First Name</Label>
-                  <Input
+                  <SearchInput
                     id="edit-first-name"
                     value={editFormData.first_name}
-                    onChange={(e) => setEditFormData({ ...editFormData, first_name: e.target.value })}
+                    onChange={(val) => setEditFormData({ ...editFormData, first_name: val })}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-last-name">Last Name</Label>
-                  <Input
+                  <SearchInput
                     id="edit-last-name"
                     value={editFormData.last_name}
-                    onChange={(e) => setEditFormData({ ...editFormData, last_name: e.target.value })}
+                    onChange={(value) => setEditFormData({ ...editFormData, last_name: value })}
                   />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-email">Email</Label>
-                <Input
+                <SearchInput
                   id="edit-email"
                   type="email"
                   value={editFormData.email}
-                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                  onChange={(val) => setEditFormData({ ...editFormData, email: val })}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-role">Role</Label>
-                <Select
-                  value={editFormData.role}
-                  onValueChange={(value) => setEditFormData({ ...editFormData, role: value })}
-                >
+                <Select value={editFormData.role} onValueChange={(value) => setEditFormData({ ...editFormData, role: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -378,10 +440,10 @@ export default function UsersPage() {
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                 <div className="space-y-0.5">
-                  <Label htmlFor="edit-is-active" className="text-base">Account Status</Label>
-                  <p className="text-sm text-gray-500">
-                    {editFormData.is_active ? "User can log in and use the system" : "User is blocked from logging in"}
-                  </p>
+                  <Label htmlFor="edit-is-active" className="text-base">
+                    Account Status
+                  </Label>
+                  <p className="text-sm text-gray-500">{editFormData.is_active ? "User can log in and use the system" : "User is blocked from logging in"}</p>
                 </div>
                 <Switch
                   id="edit-is-active"
@@ -393,19 +455,46 @@ export default function UsersPage() {
           )}
           <DialogFooter>
             <Button
-              className="hover:scale-105 rounded-lg transition-all"
+              className="hover:scale-105 cursor-pointer rounded-lg transition-all"
               variant="outline"
               onClick={() => setIsEditDialogOpen(false)}
-              disabled={userStatus === "loading"}
+              disabled={isLoadingUpdate}
             >
               Cancel
             </Button>
             <Button
-              className="bg-primary/90 hover:bg-primary text-white hover:scale-105 rounded-lg transition-all"
+              className="bg-primary/90 cursor-pointer hover:bg-primary text-white hover:scale-105 rounded-lg transition-all"
               onClick={handleUpdateUser}
-              disabled={userStatus === "loading"}
+              disabled={isLoadingUpdate}
             >
-              {userStatus === "loading" ? "Saving..." : "Save Changes"}
+              {isLoadingUpdate ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>Are you sure you want to delete this user?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              className="hover:scale-105 cursor-pointer rounded-lg transition-all"
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isLoadingUpdate}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-primary/90 cursor-pointer hover:bg-primary text-white hover:scale-105 rounded-lg transition-all"
+              onClick={handleDeleteUser}
+              disabled={isLoadingUpdate}
+            >
+              {isLoadingUpdate ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
