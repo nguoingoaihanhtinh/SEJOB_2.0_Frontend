@@ -32,6 +32,8 @@ import { Avatar } from "@mui/material";
 import { userApi, parseErrorMessage } from "../../../../api";
 import SearchInput from "../../../components/common/InputV2";
 import SkeletonPulse from "../../../components/common/SkeletonPulse";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { CustomAlert } from "@/components";
 
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,12 +41,14 @@ export default function UsersPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isActiveDialogOpen, setIsActiveDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingUpdate, setIsLoadingUpdate] = useState(false);
   const [isLoadingCreate, setIsLoadingCreate] = useState(false);
+  const { alertConfig, hideAlert, showSuccess, showError, showWarning } = useCustomAlert();
 
   // Form states
   const [addFormData, setAddFormData] = useState({
@@ -90,11 +94,12 @@ export default function UsersPage() {
       setIsLoadingCreate(true);
       await userApi.createUser(addFormData);
       await getUsers();
+      showSuccess("User added successfully");
       setIsAddDialogOpen(false);
       setAddFormData({ first_name: "", last_name: "", email: "", role: "", password: "" });
     } catch (error) {
       const errorMessage = parseErrorMessage(error.response.data);
-      window.alert(errorMessage);
+      showError(errorMessage);
     }
     finally{
       setIsLoadingCreate(false);
@@ -106,10 +111,12 @@ export default function UsersPage() {
       setIsLoadingUpdate(true);
       await userApi.updateUser(selectedUser.user_id, editFormData);
       await getUsers();
+      showSuccess("User updated successfully");
       setIsEditDialogOpen(false);
       setSelectedUser(null);
     } catch (error) {
-      console.error("Failed to update user:", error);
+      const errorMessage = parseErrorMessage(error.response.data);
+      showError(errorMessage);
     }
     finally{
       setIsLoadingUpdate(false);
@@ -121,10 +128,27 @@ export default function UsersPage() {
       setIsLoadingUpdate(true);
       await userApi.deleteUser(selectedUser.user_id);
       await getUsers();
+      showSuccess("User deleted successfully");
       setIsDeleteDialogOpen(false);
     } catch (error) {
       const errorMessage = parseErrorMessage(error.response.data);
-      window.alert(errorMessage);
+      showError(errorMessage);
+    }
+    finally{
+      setIsLoadingUpdate(false);
+    }
+  }
+
+  const handleActiveUser = async () => {
+    try {
+      setIsLoadingUpdate(true);
+      await userApi.activeUser(selectedUser.user_id);
+      await getUsers();
+      showSuccess("User activated successfully");
+      setIsActiveDialogOpen(false);
+    } catch (error) {
+      const errorMessage = parseErrorMessage(error.response.data);
+      showError(errorMessage);
     }
     finally{
       setIsLoadingUpdate(false);
@@ -147,6 +171,11 @@ export default function UsersPage() {
     setSelectedUser(user);
     setIsDeleteDialogOpen(true);
   };
+
+  const openActiveDialog = (user) => {
+    setSelectedUser(user);
+    setIsActiveDialogOpen(true);
+  }
 
   const getRoleBadgeColor = (role) => {
     const colors = {
@@ -285,6 +314,11 @@ export default function UsersPage() {
                             {user.is_active && <DropdownMenuItem onClick={() => openDeleteDialog(user)} className="text-red-600">
                               <Trash2 className="w-4 h-4 mr-2" />
                               Delete
+                            </DropdownMenuItem>}
+
+                            {!user.is_active && <DropdownMenuItem onClick={() => openActiveDialog(user)} className="text-red-600">
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Active
                             </DropdownMenuItem>}
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -499,6 +533,38 @@ export default function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Active User Dialog */}
+      <Dialog open={isActiveDialogOpen} onOpenChange={setIsActiveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Active User</DialogTitle>
+            <DialogDescription>Are you sure you want to active this user?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              className="hover:scale-105 cursor-pointer rounded-lg transition-all"
+              variant="outline"
+              onClick={() => setIsActiveDialogOpen(false)}
+              disabled={isLoadingUpdate}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-primary/90 cursor-pointer hover:bg-primary text-white hover:scale-105 rounded-lg transition-all"
+              onClick={handleActiveUser}
+              disabled={isLoadingUpdate}
+            >
+              {isLoadingUpdate ? "Activating..." : "Active"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <CustomAlert
+        {...alertConfig}
+        onClose={hideAlert}
+      />
     </div>
   );
 }

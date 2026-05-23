@@ -95,6 +95,11 @@ userApi.deleteUser = async (userId) => {
   return _.get(res, "data");
 };
 
+userApi.activeUser = async (userId) => {
+  const res = await api.put(`/api/users/${userId}/active`);
+  return _.get(res, "data");
+};
+
 export { cvApi, mediaApi, applicationApi, notificationApi, jobApi, userApi };
 
 // utils/buildSearchParams.js
