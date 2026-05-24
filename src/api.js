@@ -5,6 +5,9 @@ const cvApi = {};
 const jobApi = {};
 const mediaApi = {};
 const userApi = {};
+const companyApi = {};
+const companyTypeApi = {};
+
 const applicationApi = {};
 const notificationApi = {};
 
@@ -89,7 +92,6 @@ userApi.createUser = async (data) => {
   return _.get(res, "data");
 };
 
-
 userApi.deleteUser = async (userId) => {
   const res = await api.delete(`/api/users/${userId}`);
   return _.get(res, "data");
@@ -100,7 +102,26 @@ userApi.activeUser = async (userId) => {
   return _.get(res, "data");
 };
 
-export { cvApi, mediaApi, applicationApi, notificationApi, jobApi, userApi };
+companyApi.getCompanies = async (filters = {}, options = {}) => {
+  const params = buildSearchParams(filters, options);
+  const res = await api.get(`/api/companies`, { params });
+  return _.get(res, "data");
+};
+
+companyApi.adminUpdate = async (companyId, data) => {
+  const res = await api.put(`/api/companies/${companyId}/admin`, data);
+  return _.get(res, "data");
+};
+
+companyTypeApi.getTypes = async (filters = {}, options = {}) => {
+  const params = buildSearchParams(filters, options);
+  const res = await api.get(`/api/company_types`, { params });
+  return _.get(res, "data");
+};
+
+
+
+export { cvApi, mediaApi, applicationApi, notificationApi, jobApi, userApi, companyApi, companyTypeApi };
 
 // utils/buildSearchParams.js
 export const buildSearchParams = (filters = {}, options = {}) => {

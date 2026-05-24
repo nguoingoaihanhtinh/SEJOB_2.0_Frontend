@@ -22,28 +22,61 @@ import {
   SelectValue,
 } from '@/components/ui';
 import { Pagination } from 'antd';
-import { useDispatch, useSelector } from 'react-redux';
-import { getCompanies } from '../../../modules';
 import UpdateCompanyStatusModal from './partials/UpdateCompanyStatusModal';
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { CustomAlert } from "@/components";
+import { companyApi, companyTypeApi, parseErrorMessage } from "../../../../api";
+import SearchInput from "@/components/common/InputV2";
+import SkeletonPulse from "@/components/common/SkeletonPulse";
 
 export default function CompaniesPage() {
-  const dispatch = useDispatch();
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [types , setTypes] = useState([]);
+  const [typeFilter, setTypeFilter] = useState(null);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [companies, setCompanies] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
+  const [isLoading , setIsLoading] = useState(false);
+  const { alertConfig, hideAlert, showSuccess, showError, showWarning } = useCustomAlert();
+ 
 
-  const companies = useSelector((state) => state.company.companies);
-  const pagination = useSelector((state) => state.company.pagination);
+  const getCompanies = async () => {
+    try {
+      setIsLoading(true);
+      const res = await companyApi.getCompanies({ page: currentPage, limit: pageSize, keyword: searchQuery, company_type_ids: typeFilter });
+      setCompanies(res.data);
+      setPagination(res.pagination);
+    } catch (error) {
+      const errorMessage = parseErrorMessage(error.response.data);
+      showError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    dispatch(getCompanies({ page: currentPage, limit: pageSize }));
-  }, [currentPage, pageSize]);
+    getCompanies();
+  }, [currentPage, pageSize , searchQuery, typeFilter]);
+
+  useEffect(() => {
+    getTypes();
+  }, []);
+  
+  const getTypes = async () => {
+    try {
+      const res = await companyTypeApi.getTypes();
+      setTypes(res.data);
+    } catch (error) {
+      const errorMessage = parseErrorMessage(error.response.data);
+      showError(errorMessage);
+    }
+  };
 
   const onUpdate = async () => {
-    await dispatch(getCompanies({ page: currentPage, limit: pageSize }));
+    await getCompanies();
   };
 
   return (
@@ -53,10 +86,6 @@ export default function CompaniesPage() {
           <h3 className="text-gray-900 mb-1 font-semibold">Company Management</h3>
           <p className="text-gray-600">Manage companies, branches, and job postings</p>
         </div>
-        <Button className="bg-primary/90 hover:bg-primary text-white hover:scale-105 rounded-lg transition-all">
-          <Plus className="w-4 h-4" />
-          Add Company
-        </Button>
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200">
@@ -64,11 +93,12 @@ export default function CompaniesPage() {
           <div className="flex items-center gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search companies..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+              <SearchInput
+                placeholder="Search"
+                className= "pl-10"
+                onChange={(value) => {
+                  setSearchQuery(value);
+                }}
               />
             </div>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -77,12 +107,12 @@ export default function CompaniesPage() {
                 <SelectValue placeholder="Filter by type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="Technology">Technology</SelectItem>
-                <SelectItem value="Software">Software</SelectItem>
-                <SelectItem value="E-commerce">E-commerce</SelectItem>
-                <SelectItem value="Entertainment">Entertainment</SelectItem>
-                <SelectItem value="Automotive">Automotive</SelectItem>
+                <SelectItem value={null}>All Types</SelectItem>
+                {types && types.length && types.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {type.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -104,7 +134,33 @@ export default function CompaniesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {companies.map((company) => (
+              {isLoading ? (
+                Array.from({ length: 10 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <SkeletonPulse className="w-8 h-8 rounded-full" />
+                        <SkeletonPulse className="h-4 w-32" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <SkeletonPulse className="h-4 w-48" />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <SkeletonPulse className="h-6 w-16 rounded-full mx-auto" />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <SkeletonPulse className="h-6 w-16 rounded-full mx-auto" />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <SkeletonPulse className="h-4 w-24 mx-auto" />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <SkeletonPulse className="h-8 w-8 rounded-md ml-auto" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : companies.map((company) => (
                 <TableRow key={company.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -141,8 +197,8 @@ export default function CompaniesPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge className={`${company.users?.is_active ? 'bg-green-500 text-white border-2 border-accent-green/50 hover:bg-green-400' : 'bg-gray-100 hover:bg-gray-200'} px-4 py-1`}>
-                      {company.users?.is_active ? 'Active' : 'Inactive'}
+                    <Badge className={`${company.is_active ? 'bg-green-500 text-white border-2 border-accent-green/50 hover:bg-green-400' : 'bg-gray-100 hover:bg-gray-200'} px-4 py-1`}>
+                      {company.is_active ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">
@@ -205,6 +261,11 @@ export default function CompaniesPage() {
           onOpenChange={setIsStatusModalOpen}
         />
       )}
+
+      <CustomAlert
+        {...alertConfig}
+        onClose={hideAlert}
+      />
     </div>
   );
 }

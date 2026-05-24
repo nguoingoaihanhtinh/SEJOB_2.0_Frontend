@@ -30,8 +30,8 @@ import { Pagination } from "antd";
 import { createUser, updateUser } from "../../../modules/services/userService";
 import { Avatar } from "@mui/material";
 import { userApi, parseErrorMessage } from "../../../../api";
-import SearchInput from "../../../components/common/InputV2";
-import SkeletonPulse from "../../../components/common/SkeletonPulse";
+import SearchInput from "@/components/common/InputV2";
+import SkeletonPulse from "@/components/common/SkeletonPulse";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { CustomAlert } from "@/components";
 
@@ -79,7 +79,8 @@ export default function UsersPage() {
       setPagination(res.pagination);
       setUserStatus(res.status);
     } catch (error) {
-      console.error("Failed to get users:", error);
+      const errorMessage = parseErrorMessage(error.response.data);
+      showError(errorMessage);
     } finally {
       setIsLoading(false);
     }

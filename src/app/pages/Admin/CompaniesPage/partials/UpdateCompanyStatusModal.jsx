@@ -3,7 +3,7 @@ import { Modal, notification, Switch } from "antd";
 import { useTranslation } from "react-i18next";
 import { useDispatch } from "react-redux";
 import { CheckCircle, XCircle } from "lucide-react";
-import { updateCompanyAdmin } from "../../../../modules/services/companyService";
+import { companyApi } from "../../../../../api";
 
 export default function UpdateCompanyStatusModal({ company, onUpdate, open, onOpenChange }) {
   const { t } = useTranslation();
@@ -15,13 +15,13 @@ export default function UpdateCompanyStatusModal({ company, onUpdate, open, onOp
 
   useEffect(() => {
     setIsVerified(company?.is_verified || false);
-    setIsActive(company?.users?.is_active || false);
+    setIsActive(company?.is_active || false);
   }, [company]);
 
   const handleCancel = () => {
     onOpenChange?.(false);
     setIsVerified(company?.is_verified || false);
-    setIsActive(company?.users?.is_active || false);
+    setIsActive(company?.is_active || false);
   };
 
   const handleUpdate = () => {
@@ -33,13 +33,10 @@ export default function UpdateCompanyStatusModal({ company, onUpdate, open, onOp
     setLoading(true);
     try {
       // Call the update function passed from parent
-      dispatch(updateCompanyAdmin({
-        companyId: company.id,
-        adminData: {
-          is_verified: isVerified,
-          user_is_active: isActive,
-        },
-      })).unwrap();
+      await companyApi.adminUpdate(company.id, {
+        is_verified: isVerified,
+        is_active: isActive,
+      });
 
       onUpdate?.();
       
@@ -64,10 +61,10 @@ export default function UpdateCompanyStatusModal({ company, onUpdate, open, onOp
   const handleCancelConfirm = () => {
     setIsConfirmModalOpen(false);
     setIsVerified(company?.is_verified || false);
-    setIsActive(company?.users?.is_active || false);
+    setIsActive(company?.is_active || false);
   };
 
-  const hasChanges = isVerified !== company?.is_verified || isActive !== company?.users?.is_active;
+  const hasChanges = isVerified !== company?.is_verified || isActive !== company?.is_active;
 
   return (
     <>
@@ -203,12 +200,12 @@ export default function UpdateCompanyStatusModal({ company, onUpdate, open, onOp
               </div>
             )}
 
-            {isActive !== company?.users?.is_active && (
+            {isActive !== company?.is_active && (
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">{t("companyStatus.active") || "Active"}:</span>
                 <div className="flex items-center gap-2">
-                  <span className={company?.users?.is_active ? "text-green-600" : "text-gray-500"}>
-                    {company?.users?.is_active ? "Active" : "Inactive"}
+                  <span className={company?.is_active ? "text-green-600" : "text-gray-500"}>
+                    {company?.is_active ? "Active" : "Inactive"}
                   </span>
                   <span className="text-gray-400">→</span>
                   <span className={isActive ? "font-semibold text-green-600" : "font-semibold text-gray-500"}>
