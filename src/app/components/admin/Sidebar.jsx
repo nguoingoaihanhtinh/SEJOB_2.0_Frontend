@@ -12,7 +12,6 @@ import {
 const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/users', icon: Users, label: 'Users' },
-  { path: '/students', icon: GraduationCap, label: 'Students' },
   { path: '/companies', icon: Building2, label: 'Companies' },
   { path: '/jobs', icon: Briefcase, label: 'Jobs' },
   { path: '/reviews', icon: Star, label: 'Reviews' },

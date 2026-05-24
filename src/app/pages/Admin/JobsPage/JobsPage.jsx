@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Plus, Search, Filter, MoreVertical, Eye, Edit, Trash2, Briefcase, DollarSign, MapPin, Building2, Zap, Flame, Diamond } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { Search, Filter, MoreVertical, Eye, Edit, Trash2, Briefcase, DollarSign, MapPin, Building2, Zap, Flame, Diamond } from "lucide-react";
 import {
   Button,
-  Input,
   Badge,
   Table,
   TableBody,
@@ -19,47 +18,81 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Label,
-  Textarea,
-  Checkbox,
-  Separator,
 } from "@/components/ui";
-import { useDispatch, useSelector } from 'react-redux';
-import { getJobs } from '../../../modules';
-import { Pagination } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import UpdateJobStatusModal from '../JobDescription/partials/UpdateJobStatusModal';
-
-const categories = ['Information Technology', 'Marketing', 'Finance', 'Education', 'Engineering', 'Design', 'Sales', 'Healthcare'];
-const levels = ['Intern', 'Fresher', 'Junior', 'Mid-level', 'Senior', 'Manager', 'Director', 'Executive'];
-const employmentTypes = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Freelance', 'Remote', 'Temporary'];
-const skills = ['JavaScript', 'ReactJS', 'NodeJS', 'Communication', 'Project Management', 'Teamwork', 'UI/UX Design', 'Python', 'SQL', 'AWS'];
+import { Pagination } from "antd";
+import { useNavigate } from "react-router-dom";
+import UpdateJobStatusModal from "../JobDescription/partials/UpdateJobStatusModal";
+import { jobApi, categoryApi, levelApi, parseErrorMessage } from "../../../../api";
+import SearchInput from "@/components/common/InputV2";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { CustomAlert } from "@/components";
+import SkeletonPulse from "@/components/common/SkeletonPulse";
 
 export default function JobsPage() {
-  const dispatch = useDispatch();
   const nav = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [levelFilter, setLevelFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState(null);
+  const [levelFilter, setLevelFilter] = useState("all");
   // const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   // const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [categories, setCategories] = useState([]);
+  const [levels, setLevels] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { alertConfig, hideAlert, showSuccess, showError, showWarning } = useCustomAlert();
 
-  const jobs = useSelector((state) => state.jobs.jobs);
-  const pagination = useSelector((state) => state.jobs.pagination);
+  const [jobs, setJobs] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
 
   useEffect(() => {
-    dispatch(getJobs({ page: currentPage, limit: pageSize }));
-  }, [currentPage, pageSize]);
+    handleFetchJobs();
+  }, [currentPage, pageSize, searchQuery, categoryFilter, levelFilter]);
+
+  const handleFetchJobs = async () => {
+    try {
+      setIsLoading(true);
+      const res = await jobApi.findAllJob({ page: currentPage, limit: pageSize, keyword: searchQuery, category_ids: categoryFilter, level_ids: levelFilter });
+      setJobs(res.data);
+      setPagination(res.pagination);
+    } catch (error) {
+      const errorMessage = parseErrorMessage(error.response.data);
+      showError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFetchCategories = async () => {
+    try {
+      const res = await categoryApi.getCategories();
+      setCategories(res.data);
+    } catch (error) {
+      const errorMessage = parseErrorMessage(error.response.data);
+      showError(errorMessage);
+    }
+  };
+
+  const handleFetchLevels = async () => {
+    try {
+      const res = await levelApi.getLevels();
+      setLevels(res.data);
+    } catch (error) {
+      const errorMessage = parseErrorMessage(error.response.data);
+      showError(errorMessage);
+    }
+  };
+
+  useEffect(() => {
+    handleFetchCategories();
+    handleFetchLevels();
+  }, []);
+
+  const onUpdateJob = async () => {
+    await handleFetchJobs();
+  }
 
   return (
     <div className="space-y-6">
@@ -79,12 +112,7 @@ export default function JobsPage() {
           <div className="flex items-center gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search jobs..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+              <SearchInput placeholder="Search jobs..." onChange={(val) => setSearchQuery(val)} className="pl-10" />
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-56">
@@ -92,10 +120,14 @@ export default function JobsPage() {
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
+                <SelectItem value={null}>All Categories</SelectItem>
+                {categories &&
+                  categories.length &&
+                  categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
             <Select value={levelFilter} onValueChange={setLevelFilter}>
@@ -104,15 +136,19 @@ export default function JobsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Levels</SelectItem>
-                {levels.map((level) => (
-                  <SelectItem key={level} value={level}>{level}</SelectItem>
-                ))}
+                {levels &&
+                  levels.length &&
+                  levels.map((level) => (
+                    <SelectItem key={level.id} value={level.id}>
+                      {level.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        <div className='px-4'>
+        <div className="px-4">
           <Table>
             <TableHeader>
               <TableRow>
@@ -127,107 +163,120 @@ export default function JobsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {jobs.map((job) => (
-                <TableRow key={job.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="w-4 h-4 text-gray-400" />
-                      <span>{job.title}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-gray-600">{job.company?.name}</TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex flex-wrap gap-1 justify-center">
-                      {job.categories?.slice(0, 3).map((cat, index) => (
-                        <Badge key={index} variant="secondary" className="bg-blue-50 text-blue-700 text-xs">
-                          {cat.name}
+              {isLoading
+                ? Array.from({ length: 10 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <SkeletonPulse className="w-8 h-8 rounded-full" />
+                          <SkeletonPulse className="h-4 w-32" />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <SkeletonPulse className="h-4 w-48" />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <SkeletonPulse className="h-6 w-16 rounded-full mx-auto" />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <SkeletonPulse className="h-6 w-16 rounded-full mx-auto" />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <SkeletonPulse className="h-4 w-24 mx-auto" />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <SkeletonPulse className="h-8 w-8 rounded-md ml-auto" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : jobs.map((job) => (
+                    <TableRow key={job.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="w-4 h-4 text-gray-400" />
+                          <span>{job.title}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-gray-600">{job.company?.name}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex flex-wrap gap-1 justify-center">
+                          {job.categories?.slice(0, 3).map((cat, index) => (
+                            <Badge key={index} variant="secondary" className="bg-blue-50 text-blue-700 text-xs">
+                              {cat.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="secondary" className="bg-purple-50 text-purple-700">
+                          {job.levels?.map((lvl) => lvl.name).join(", ")}
                         </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="secondary" className="bg-purple-50 text-purple-700">
-                      {job.levels?.map(lvl => lvl.name).join(', ')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="w-3 h-3" />
-                      {job.salary?.from} - {job.salary?.to} {job.salary?.currency}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex gap-1 justify-center">
-                      {job.isDiamond && (
-                        <Diamond className="w-4 h-4 text-cyan-600" fill="currentColor" />
-                      )}
-                      {job.isHot && (
-                        <Flame className="w-4 h-4 text-orange-600" fill="currentColor" />
-                      )}
-                      {job.isJobFlashActive && (
-                        <Zap className="w-4 h-4 text-yellow-600" fill="currentColor" />
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge className={`${job.status === 'Approved' ? 'bg-green-400 text-white border-2 border-accent-green/50' : 'bg-gray-100'} px-4 py-1`}>
-                      {job.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center sticky right-0 bg-gray-100 z-10 shadow-2xl">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="bg-white" align="end">
-                        <DropdownMenuItem onClick={() => {
-                          nav(`/job/${job.id}`);
-                        }}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          setSelectedJob(job);
-                          setIsStatusModalOpen(true);
-                        }}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Update Status
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      </TableCell>
+                      <TableCell className="text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="w-3 h-3" />
+                          {job.salary?.from} - {job.salary?.to} {job.salary?.currency}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex gap-1 justify-center">
+                          {job.isDiamond && <Diamond className="w-4 h-4 text-cyan-600" fill="currentColor" />}
+                          {job.isHot && <Flame className="w-4 h-4 text-orange-600" fill="currentColor" />}
+                          {job.isJobFlashActive && <Zap className="w-4 h-4 text-yellow-600" fill="currentColor" />}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge className={`${job.status === "Approved" ? "bg-green-400 text-white border-2 border-accent-green/50" : "bg-gray-100"} px-4 py-1`}>
+                          {job.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center sticky right-0 bg-gray-100 z-10 shadow-2xl">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="bg-white" align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                nav(`/job/${job.id}`);
+                              }}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedJob(job);
+                                setIsStatusModalOpen(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Update Status
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
             </TableBody>
           </Table>
         </div>
       </div>
 
-      <Pagination align="end"
+      <Pagination
+        align="end"
         current={currentPage}
         total={pagination?.total ?? 0}
         pageSize={pageSize}
-        onChange={
-          (newPage, newPageSize) => {
-            setCurrentPage(newPage)
-            setPageSize(newPageSize)
-          }
-        }
+        onChange={(newPage, newPageSize) => {
+          setCurrentPage(newPage);
+          setPageSize(newPageSize);
+        }}
       />
 
-      {selectedJob && (
-        <UpdateJobStatusModal
-          job={selectedJob}
-          open={isStatusModalOpen}
-          onOpenChange={setIsStatusModalOpen}
-        />
-      )}
+      {selectedJob && <UpdateJobStatusModal onUpdate={onUpdateJob} job={selectedJob} open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen} />}
 
       {/* Add Job Dialog */}
       {/* <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -499,6 +548,8 @@ export default function JobsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog> */}
+
+      <CustomAlert {...alertConfig} onClose={hideAlert} />
     </div>
   );
 }

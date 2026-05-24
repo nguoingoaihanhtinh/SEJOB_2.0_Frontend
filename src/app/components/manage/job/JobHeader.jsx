@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui";
 import { ArrowLeft } from "lucide-react";
+import { srcAsset } from "@/lib";
 
 export default function JobHeader({ job = {}, textButton, onClickButton }) {
   const jobTitle = job.title || "Job Title";
@@ -46,7 +47,7 @@ export default function JobHeader({ job = {}, textButton, onClickButton }) {
         <div className="flex items-center justify-between gap-3">
           <div className="flex gap-6">
             <img
-              src={job.company?.logo || job.logo}
+              src={job.company?.logo || srcAsset.nomadIcon}
               alt={job.company?.name}
               className="w-14 h-14 object-contain"
             />

@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { srcAsset } from "@/lib";
 
 export default function CompanySection({ job }) {
   const { t } = useTranslation();
@@ -9,7 +10,7 @@ export default function CompanySection({ job }) {
     ? job.company
     : job?.company?.name || "Company Name";
 
-  const companyLogo = job?.company?.logo || job.logo;
+  const companyLogo = job?.company?.logo || srcAsset.nomadIcon;
   const companyDescription = job?.company?.description || job?.description || "Job Description";
 
   return (

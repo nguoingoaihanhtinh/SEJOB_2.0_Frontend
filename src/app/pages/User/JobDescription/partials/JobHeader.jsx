@@ -71,7 +71,7 @@ export default function JobHeader({ job = {}, layout = layoutType.full, textButt
         <div className="flex items-center justify-between gap-3">
           <div className="flex gap-6">
             <img
-              src={job.company?.logo || job.logo}
+              src={job.company?.logo || srcAsset.nomadIcon}
               alt={job.company?.name}
               className="w-14 h-14 object-contain"
             />

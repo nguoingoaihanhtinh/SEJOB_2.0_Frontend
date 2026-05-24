@@ -174,7 +174,6 @@ export default function MyJobs() {
 
     useEffect(() => {
         const fetchRecentViewedJobs = async () => {
-            console.log("heheh")
             try {
                 const raw = localStorage.getItem('recent_job_viewed');
                 const jobIds = raw ? JSON.parse(raw) : [];

@@ -7,6 +7,8 @@ const mediaApi = {};
 const userApi = {};
 const companyApi = {};
 const companyTypeApi = {};
+const categoryApi = {};
+const levelApi = {};
 
 const applicationApi = {};
 const notificationApi = {};
@@ -33,6 +35,7 @@ jobApi.getJobById = async (jobId) => {
 
 jobApi.findAllJob = async (params) => {
     try {
+        params = buildSearchParams(params, {});
         const data = await api.get(`/api/jobs`, { params });
         return _.get(data, 'data');
     } catch (error) {
@@ -119,9 +122,19 @@ companyTypeApi.getTypes = async (filters = {}, options = {}) => {
   return _.get(res, "data");
 };
 
+categoryApi.getCategories = async (filters = {}, options = {}) => {
+  const params = buildSearchParams(filters, options);
+  const res = await api.get(`/api/categories`, { params });
+  return _.get(res, "data");
+};
 
+levelApi.getLevels = async (filters = {}, options = {}) => {
+  const params = buildSearchParams(filters, options);
+  const res = await api.get(`/api/levels`, { params });
+  return _.get(res, "data");
+};
 
-export { cvApi, mediaApi, applicationApi, notificationApi, jobApi, userApi, companyApi, companyTypeApi };
+export { cvApi, mediaApi, applicationApi, notificationApi, jobApi, userApi, companyApi, companyTypeApi, categoryApi, levelApi };
 
 // utils/buildSearchParams.js
 export const buildSearchParams = (filters = {}, options = {}) => {

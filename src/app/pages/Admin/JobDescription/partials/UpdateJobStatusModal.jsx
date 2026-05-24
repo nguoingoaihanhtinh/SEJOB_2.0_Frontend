@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { JobStatus } from "../../../../lib/enums";
 import { updateJob } from "../../../../modules";
 
-export default function UpdateJobStatusModal({ job, open, onOpenChange }) {
+export default function UpdateJobStatusModal({ job, open, onUpdate, onOpenChange }) {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const [selectedStatus, setSelectedStatus] = useState(job?.status || JobStatus.ACTIVE);
@@ -38,7 +38,7 @@ export default function UpdateJobStatusModal({ job, open, onOpenChange }) {
           status: selectedStatus,
         },
       })).unwrap();
-      
+      if (onUpdate) await onUpdate();
       notification.success({
         message: t("jobStatus.updateSuccess") || "Success",
         description: t("jobStatus.updateSuccessDesc") || "Job status has been updated successfully.",

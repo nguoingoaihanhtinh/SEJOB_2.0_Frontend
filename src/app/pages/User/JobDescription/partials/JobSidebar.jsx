@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui";
 import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { srcAsset } from "@/lib";
 
 const isValidValue = (value) => {
   if (!value) return false;
@@ -108,7 +109,7 @@ export default function JobSidebar({ job }) {
   const nav = useNavigate();
   const jobStatus = useSelector(state => state.jobs.status);
   const jobError = useSelector(state => state.jobs.error);
-  const companyLogo = job?.company?.logo || job.logo;
+  const companyLogo = job?.company?.logo || srcAsset.nomadIcon;
   const companyName = typeof job?.company === 'string'
     ? job.company
     : job?.company?.name || "Company Name";

@@ -5,8 +5,6 @@ import {
   AdminDashboard as Dashboard,
   JobsPage,
   SettingsPage,
-  StudentDetailPage,
-  StudentsPage,
   UsersPage,
   JobDescriptionAdmin as JobDescription,
   ReviewsPage
@@ -25,8 +23,6 @@ export default function AdminRoutes() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="users" element={<UsersPage />} />
-        <Route path="students" element={<StudentsPage />} />
-        <Route path="students/:id" element={<StudentDetailPage />} />
         <Route path="companies" element={<CompaniesPage />} />
         <Route path="companies/:id" element={<CompanyDetailPage />} />
         <Route path="jobs" element={<JobsPage />} />
