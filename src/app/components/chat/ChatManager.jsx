@@ -52,7 +52,7 @@ export default function ChatManager() {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsListOpen(!isListOpen)}
-          className={`w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all pointer-events-auto ${
+          className={`relative w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all pointer-events-auto ${
             isListOpen 
               ? "bg-white text-blue-600 border-2 border-blue-600 rotate-90" 
               : "bg-blue-600 text-white hover:bg-blue-700"

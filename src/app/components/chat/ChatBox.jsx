@@ -91,7 +91,7 @@ export default function ChatBox({ chatData }) {
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
       style={{
         width: "320px",
-        height: isMinimized ? "48px" : "450px", // 48px header only
+        height: isMinimized ? "56px" : "450px", // 56px header only
       }}
     >
       {/* Header */}

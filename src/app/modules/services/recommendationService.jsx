@@ -117,13 +117,29 @@ export const getTopicSuggestions = createAsyncThunk(
     }
 );
 
+export const getCareerAdvice = createAsyncThunk(
+    "recommendations/getCareerAdvice",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await api.get(`${apiBaseUrl}/career-advice`, {
+                withCredentials: true,
+            });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Something went wrong");
+        }
+    }
+);
+
 const initialState = {
     recommendedJobs: [],
     similarJobs: [],
     matchingStudents: [],
     pagination: null,
     topicSuggestions: null,
+    careerAdvice: null,
     isRequestingTopics: false,
+    isRequestingAdvice: false,
     status: "idle",
     error: null,
 };
@@ -227,6 +243,21 @@ const recommendationSlice = createSlice({
             })
             .addCase(getTopicSuggestions.rejected, (state, action) => {
                 state.isRequestingTopics = false;
+                state.error = action.payload;
+            });
+
+        // getCareerAdvice
+        builder
+            .addCase(getCareerAdvice.pending, (state) => {
+                state.isRequestingAdvice = true;
+                state.error = null;
+            })
+            .addCase(getCareerAdvice.fulfilled, (state, action) => {
+                state.isRequestingAdvice = false;
+                state.careerAdvice = action.payload.data;
+            })
+            .addCase(getCareerAdvice.rejected, (state, action) => {
+                state.isRequestingAdvice = false;
                 state.error = action.payload;
             });
     },
