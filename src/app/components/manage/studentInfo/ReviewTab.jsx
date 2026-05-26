@@ -43,9 +43,10 @@ export default function ReviewTab({ application }) {
 
       {companyReviews.length === 0 && (
         <ReviewForm 
+          variant="formal"
           onSubmit={handleReviewSubmit} 
-          title="Review this Applicant" 
-          submitLabel="Save Review"
+          title="Student Performance Evaluation" 
+          submitLabel="Submit Official Evaluation"
         />
       )}
     </div>
