@@ -6,7 +6,7 @@ import { srcAsset } from "../../../lib";
 import { useCustomAlert } from "../../../hooks/useCustomAlert";
 import { useTranslation } from "react-i18next";
 import { Button, Input } from "@/components/ui";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { requestPasswordReset, resetPassword, validatePassword } from "../../../modules";
 import { useDispatch } from "react-redux";
 
@@ -26,7 +26,7 @@ export default function RecoverPassword() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [passwordError, setPasswordError] = useState("");
     const [confirmPasswordError, setConfirmPasswordError] = useState("");
-
+    const [isLoading, setIsLoading] = useState(false);
     const { alertConfig, hideAlert, showSuccess, showError } = useCustomAlert();
 
     useEffect(() => {
@@ -40,11 +40,11 @@ export default function RecoverPassword() {
     //validate
     const validateCode = (codeValue) => {
         if (!codeValue) {
-            setError("Code is required.");
+            setError(t('validation.required'));
             return false;
         }
         if (codeValue.length !== 6 || !/^\d+$/.test(codeValue)) {
-            setError("Please enter a valid 6-digit code.");
+            setError(t('validation.invalidCode'));
             return false;
         }
         setError("");
@@ -102,13 +102,15 @@ export default function RecoverPassword() {
 
         if (isValid && isPasswordValid && isConfirmPasswordValid) {
             try {
+                setIsLoading(true);
                 await dispatch(resetPassword({ email, otp: code, new_password: password })).unwrap();
                 showSuccess("Change password successfully!");
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 nav("/signin");
             } catch (error) {
-                console.error("Error change password:", error);
                 showError(error || "Failed to change password. Please try again.");
+            } finally {
+                setIsLoading(false);
             }
         }
     };
@@ -121,7 +123,6 @@ export default function RecoverPassword() {
             showSuccess("Verification code resent!");
             setCountdown(60);
         } catch (error) {
-            console.error("Error resending code:", error);
             showError(error || "Failed to resend code. Please try again.");
         }
     };
@@ -215,7 +216,7 @@ export default function RecoverPassword() {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                             >
                                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
@@ -247,7 +248,7 @@ export default function RecoverPassword() {
                             <button
                                 type="button"
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                             >
                                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
@@ -259,10 +260,17 @@ export default function RecoverPassword() {
 
                     <Button
                         type="submit"
-                        disabled={error || passwordError || confirmPasswordError || !code || !password || !confirmPassword}
+                        disabled={isLoading || error || passwordError || confirmPasswordError || !code || !password || !confirmPassword}
                         className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-11 px-8 text-base font-semibold cursor-pointer"
                     >
-                        {t("auth.change_password")}
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="animate-spin" />
+                                {t("auth.change_password")}
+                            </>
+                        ) : (
+                            t("auth.change_password")
+                        )}
                     </Button>
                 </form>
             </motion.div>

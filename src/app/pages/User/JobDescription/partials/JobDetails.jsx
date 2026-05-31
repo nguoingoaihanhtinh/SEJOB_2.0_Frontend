@@ -1,5 +1,3 @@
-// eslint-disable-next-line no-unused-vars
-import { motion } from "framer-motion";
 import { CircleCheck, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
@@ -31,26 +29,10 @@ export default function JobDetails({ job }) {
     );
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
-
   // Parse string with HTML breaks and newlines to array
   const parseStringToArray = (value) => {
     if (Array.isArray(value)) return value;
     if (typeof value === 'string' && value.trim()) {
-      // Split by HTML breaks OR newlines and clean (ignore the break tokens themselves)
       return value
         .split(/<br\s*\/?>(?:\s*)?|\n/)
         .map(line => line.trim())
@@ -59,16 +41,10 @@ export default function JobDetails({ job }) {
     return [];
   };
 
-  // Handle responsibilities - ready for future data
   const responsibilities = parseStringToArray(job.responsibilities);
-
-  // Handle requirements
   const requirements = parseStringToArray(job.requirement);
-
-  // Handle nice to haves - ready for future data
   const niceToHaves = parseStringToArray(job.nice_to_haves);
 
-  // Handle work locations
   const getWorkLocations = () => {
     const entries = [];
     const addEntry = (description, title) => {
@@ -133,24 +109,18 @@ export default function JobDetails({ job }) {
   const workLocations = getWorkLocations();
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="space-y-8"
-    >
+    <div className="space-y-8">
       {/* Description */}
-      <motion.section variants={itemVariants}>
+      <section>
         <h4 className="text-2xl font-bold text-foreground mb-4">{t("job.description")}</h4>
         <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
           {job?.description || t("job.no_description")}
         </p>
-      </motion.section>
+      </section>
 
-
-      {/* Responsibilities - will show when API provides data */}
+      {/* Responsibilities */}
       {responsibilities.length > 0 && (
-        <motion.section variants={itemVariants}>
+        <section>
           <h4 className="text-2xl font-bold text-foreground mb-4">{t("job.responsibilities")}</h4>
           <ul className="space-y-2">
             {responsibilities.map((item, index) => (
@@ -160,12 +130,12 @@ export default function JobDetails({ job }) {
               </li>
             ))}
           </ul>
-        </motion.section>
+        </section>
       )}
 
       {/* Requirements */}
       {requirements.length > 0 && (
-        <motion.section variants={itemVariants}>
+        <section>
           <h4 className="text-2xl font-bold text-foreground mb-4">{t("job.who_you_are")}</h4>
           <ul className="space-y-2">
             {requirements.map((item, index) => (
@@ -175,12 +145,12 @@ export default function JobDetails({ job }) {
               </li>
             ))}
           </ul>
-        </motion.section>
+        </section>
       )}
 
-      {/* Nice to Haves - will show when API provides data */}
+      {/* Nice to Haves */}
       {niceToHaves.length > 0 && (
-        <motion.section variants={itemVariants}>
+        <section>
           <h4 className="text-2xl font-bold text-foreground mb-4">{t("job.nice_to_haves")}</h4>
           <ul className="space-y-2">
             {niceToHaves.map((item, index) => (
@@ -190,12 +160,12 @@ export default function JobDetails({ job }) {
               </li>
             ))}
           </ul>
-        </motion.section>
+        </section>
       )}
 
       {/* Work Locations */}
       {workLocations.length > 0 && (
-        <motion.section variants={itemVariants}>
+        <section>
           <h4 className="text-2xl font-bold text-foreground mb-4">{t("job.work_locations")}</h4>
           <ul className="space-y-3">
             {workLocations.map((location, index) => (
@@ -208,8 +178,8 @@ export default function JobDetails({ job }) {
               </li>
             ))}
           </ul>
-        </motion.section>
+        </section>
       )}
-    </motion.div>
+    </div>
   );
 };

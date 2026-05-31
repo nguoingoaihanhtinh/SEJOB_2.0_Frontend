@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { delay, motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { CustomAlert, LangButtonGroup } from "@/components";
 import { srcAsset } from "../../../lib";
@@ -28,10 +28,11 @@ export default function SignUp() {
   const [firstnameError, setFirstnameError] = useState("");
   const [lastnameError, setLastnameError] = useState("");
   const { alertConfig, hideAlert, showSuccess, showError, showWarning } = useCustomAlert();
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateFirstnameField = (firstnameValue) => {
     if (!firstnameValue) {
-      setFirstnameError("First name is required.");
+      setFirstnameError(t("validation.required"));
       return false;
     } else {
       setFirstnameError("");
@@ -41,7 +42,7 @@ export default function SignUp() {
 
   const validateLastnameField = (lastnameValue) => {
     if (!lastnameValue) {
-      setLastnameError("Last name is required.");
+      setLastnameError(t("validation.required"));
       return false;
     } else {
       setLastnameError("");
@@ -51,10 +52,10 @@ export default function SignUp() {
 
   const validateEmailField = (emailValue) => {
     if (!emailValue) {
-      setEmailError("Email is required.");
+      setEmailError(t("validation.required"));
       return false;
     } else if (!validateEmail(emailValue)) {
-      setEmailError("Please enter a valid email address.");
+      setEmailError(t("validation.invalidEmail"));
       return false;
     } else {
       setEmailError("");
@@ -82,7 +83,7 @@ export default function SignUp() {
 
   const validateConfirmPasswordField = (confirmPasswordValue) => {
     if (password !== confirmPasswordValue) {
-      setConfirmPasswordError("Passwords do not match.");
+      setConfirmPasswordError(t("validation.passwordMismatch"));
       return false;
     } else {
       setConfirmPasswordError("");
@@ -123,6 +124,7 @@ export default function SignUp() {
 
     if (isFirstnameValid && isLastnameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid) {
       try {
+        setIsLoading(true);
         const result = await dispatch(register({ email, password, confirm_password: confirmPassword, first_name: firstname, last_name: lastname }));
         if (register.fulfilled.match(result)) {
           showSuccess("Registration successful! Please sign in.");
@@ -133,6 +135,8 @@ export default function SignUp() {
         }
       } catch (error) {
         showError(error.message || "Registration failed");
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -241,7 +245,7 @@ export default function SignUp() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -273,7 +277,7 @@ export default function SignUp() {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -285,9 +289,17 @@ export default function SignUp() {
 
           <Button
             type="submit"
-            className="w-1/2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-12 text-base font-semibold cursor-pointer"
+            disabled={isLoading}
+            className="cursor-pointer w-1/2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-12 text-base font-semibold cursor-pointer"
           >
-            {t("auth.sign_up")}
+            {isLoading ? (
+              <>
+                <Loader2 className="animate-spin" />
+                {t("auth.sign_up")}
+              </>
+            ) : (
+              t("auth.sign_up")
+            )}
           </Button>
         </form>
       </motion.div>

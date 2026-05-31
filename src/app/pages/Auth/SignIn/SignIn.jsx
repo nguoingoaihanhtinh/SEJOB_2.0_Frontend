@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CustomAlert, LangButtonGroup } from "@/components";
 import { srcAsset } from "../../../lib";
@@ -23,15 +23,15 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-
+  const [loading, setLoading] = useState(false);
   const { alertConfig, hideAlert, showSuccess, showError } = useCustomAlert();
 
   const validateEmailField = (emailValue) => {
     if (!emailValue) {
-      setEmailError("Email is required.");
+      setEmailError(t('validation.required'));
       return false;
     } else if (!validateEmail(emailValue)) {
-      setEmailError("Please enter a valid email address.");
+      setEmailError(t('validation.invalidEmail'));
       return false;
     } else {
       setEmailError("");
@@ -71,6 +71,7 @@ export default function SignIn() {
     const isPasswordValid = validatePasswordField(password);
 
     if (isEmailValid && isPasswordValid) {
+      setLoading(true);
       try {
         const result = await dispatch(loginWithEmail({ email, password }));
         if (loginWithEmail.fulfilled.match(result)) {
@@ -84,6 +85,9 @@ export default function SignIn() {
       } catch (error) {
         console.error("Error during login:", error);
         showError("An error occurred during login. Please try again.");
+      }
+      finally {
+        setLoading(false);
       }
     }
   };
@@ -161,7 +165,7 @@ export default function SignIn() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -176,9 +180,17 @@ export default function SignIn() {
 
           <Button
             type="submit"
+            disabled={loading}
             className="w-1/2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-12 text-base font-semibold cursor-pointer"
           >
-            {t("auth.sign_in")}
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" />
+                {t("auth.sign_in")}
+              </>
+            ) : (
+              t("auth.sign_in")
+            )}
           </Button>
         </form>
       </motion.div>

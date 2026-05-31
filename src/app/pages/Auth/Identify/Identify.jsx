@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CustomAlert, LangButtonGroup } from "@/components";
 import { srcAsset } from "../../../lib";
@@ -16,17 +17,17 @@ export default function Identify() {
 
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
-
+  const [isLoading, setIsLoading] = useState(false);
   const { alertConfig, hideAlert, showSuccess, showError } = useCustomAlert();
 
   const validateField = (value) => {
     if (!value) {
-      setError("Email is required.");
+      setError(t('validation.required'));
       return false;
     }
     
     if (!validateEmail(value)) {
-      setError("Please enter a valid email address.");
+      setError(t('validation.invalidEmail'));
       return false;
     }
     
@@ -44,6 +45,7 @@ export default function Identify() {
 
     if (isValid) {
       try {
+        setIsLoading(true);
         await dispatch(requestPasswordReset({ email })).unwrap();
         showSuccess("Verification code sent!");
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -51,6 +53,9 @@ export default function Identify() {
       } catch (error) {
         console.error("Error sending code:", error);
         showError(error || "Failed to send verification code. Please try again.");
+      }
+      finally {
+        setIsLoading(false);
       }
     }
   };
@@ -118,9 +123,17 @@ export default function Identify() {
             </Button>
             <Button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-11 px-8 text-base font-semibold cursor-pointer"
+              disabled={isLoading}
+              className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-11 px-8 text-base font-semibold cursor-pointer"
             >
-              {t("search")}
+              {isLoading ? (
+                <>
+                  <Loader2 className="animate-spin" />
+                  {t("search")}
+                </>
+              ) : (
+                t("search")
+              )}
             </Button>
           </div>
         </form>

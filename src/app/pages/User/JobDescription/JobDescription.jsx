@@ -24,6 +24,7 @@ export default function JobDescription({
   showCompanySection = true,
   showSimilarJobs = true,
   layout = layoutType.full,
+  initialJob = null,
 }) {
   const layoutConfig = {
     [layoutType.full]: {
@@ -72,7 +73,7 @@ export default function JobDescription({
   const navigate = useNavigate();
   const { t } = useTranslation();
  
-  const [job, setJob] = useState(null);
+  const [job, setJob] = useState(initialJob);
   const [jobStatus, setJobStatus] = useState("idle"); // "idle" | "loading" | "failed"
   const [jobError, setJobError] = useState(null);
  
@@ -169,7 +170,12 @@ export default function JobDescription({
       }
     }
   }, [jobId]);
- 
+  
+  useEffect(() => {
+    if (initialJob) {
+      setJob(initialJob);
+    }
+  }, [initialJob]);
   // Show loading state
   if (jobStatus === "loading") {
     return (

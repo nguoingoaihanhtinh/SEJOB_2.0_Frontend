@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Container, Box, Stack, useMediaQuery, CircularProgress, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { JobListSection, HeroSection, FilterDialog, FilterToolbar } from "../../../components";
 import JobDescription from "../JobDescription";
 import TopCVDescription from "../TopCVDescription";
@@ -15,6 +15,7 @@ import { X } from "lucide-react";
 export default function FindJobs() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const theme = useTheme();
 
     const [selectedJob, setSelectedJob] = useState(null);
@@ -82,6 +83,7 @@ export default function FindJobs() {
             }
             return;
         }
+
         setSelectedJob(job);
     };
 
@@ -137,7 +139,7 @@ export default function FindJobs() {
                                 />
                             ) : (
                                 <JobDescription
-                                    job={selectedJob}
+                                    initialJob={selectedJob}
                                     layout={layoutType.preview}
                                 />
                             )}

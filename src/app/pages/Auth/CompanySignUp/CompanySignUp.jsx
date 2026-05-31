@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { delay, motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { FormControlLabel, Checkbox } from "@mui/material";
@@ -43,7 +43,7 @@ export default function CompanySignUp() {
   const countries = [{ id: 1, name: 'Việt Nam' }];
   const [companyType, setCompanyType] = useState([]);
   const [showCompanyTypeDropdown, setShowCompanyTypeDropdown] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -83,7 +83,7 @@ export default function CompanySignUp() {
   const [firstName, setFirstName] = useState("");
   const [phone, setPhone] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState(null);
   const [agreeTerms, setAgreeTerms] = useState(false);
 
   const [loginEmailError, setLoginEmailError] = useState("");
@@ -336,7 +336,7 @@ export default function CompanySignUp() {
             }))
           }
         };
-
+        setIsLoading(true);
         const result = await dispatch(register(payload));
         if (register.fulfilled.match(result)) {
           showSuccess("Đăng ký thành công! Vui lòng đăng nhập.");
@@ -344,6 +344,8 @@ export default function CompanySignUp() {
         }
       } catch (error) {
         showError(error.message || "Đăng ký thất bại");
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -980,13 +982,20 @@ export default function CompanySignUp() {
             {/* Submit Button */}
             <Button
               type="submit"
-              disabled={!agreeTerms}
-              className={`w-full rounded-lg h-12 text-base font-semibold ${agreeTerms
+              disabled={isLoading || !agreeTerms}
+              className={`w-full cursor-pointer rounded-lg h-12 text-base font-semibold ${agreeTerms && !isLoading
                 ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
             >
-              Hoàn tất
+              {isLoading ? (
+                <>
+                  <Loader2 className="animate-spin" />
+                  Hoàn tất
+                </>
+              ) : (
+                'Hoàn tất'
+              )}
             </Button>
           </div>
         </form>

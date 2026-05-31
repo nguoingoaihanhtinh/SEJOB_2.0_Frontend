@@ -986,6 +986,7 @@
   },
   "validation": {
     "required": "This field is required.",
+    "invalidCode": "Please enter a valid 6-digit code.",
     "invalidEmail": "Please enter a valid email address.",
     "minLength": "This field must be at least {{min}} characters long.",
     "maxLength": "This field must be at most {{max}} characters long.",

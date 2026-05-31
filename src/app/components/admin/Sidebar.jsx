@@ -15,7 +15,7 @@ const navItems = [
   { path: '/companies', icon: Building2, label: 'Companies' },
   { path: '/jobs', icon: Briefcase, label: 'Jobs' },
   { path: '/reviews', icon: Star, label: 'Reviews' },
-  { path: '/settings', icon: Settings, label: 'Settings' },
+  // { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function Sidebar() {
