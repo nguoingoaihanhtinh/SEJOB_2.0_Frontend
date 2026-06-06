@@ -14,7 +14,7 @@ const baseURL = import.meta.env.MODE === "production" ? productURL : development
 
 const instance = axios.create({
   baseURL: baseURL,
-  timeout: 15000,
+  timeout: 60000,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json; charset=utf-8",

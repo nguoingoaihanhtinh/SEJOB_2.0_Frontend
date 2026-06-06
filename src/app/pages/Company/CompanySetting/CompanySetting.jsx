@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, Share2 } from 'lucide-react';
-import { TabNavigation } from './partials/TabNavigate';
 import { OverviewTab } from './partials/OverviewTab';
 import { SocialLinksTab } from './partials/SocialLinksTab';
 import { getCompany } from '../../../modules/services/companyService';

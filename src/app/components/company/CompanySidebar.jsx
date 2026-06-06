@@ -81,7 +81,7 @@ export default function CompanySidebar() {
       {/* Settings Section */}
       <div className="px-3 py-4 border-t border-border space-y-1 border-gray-300">
         <div className="px-3 py-2 text-xs font-medium text-muted-foreground">{t("company.sidebar.settings").toUpperCase()}</div>
-        <NavLink
+        {/* <NavLink
           to="/settings"
           className={({ isActive }) =>
             `group w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-md transition-colors relative hover:bg-primary-50 ${isActive
@@ -100,7 +100,7 @@ export default function CompanySidebar() {
               <span>{t("company.sidebar.settings")}</span>
             </>
           )}
-        </NavLink>
+        </NavLink> */}
         <button
           className="
             group w-full flex items-center gap-3 px-3 py-2.5

@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Save, Loader2, Plus, Trash2 } from 'lucide-react';
 import { updateCompany } from '../../../../modules/services/companyService';
+import { useCustomAlert } from '../../../../hooks/useCustomAlert';
+import { CustomAlert } from "@/components";
 
 export function SocialLinksTab({ companyId }) {
     const { t } = useTranslation();
@@ -12,6 +14,7 @@ export function SocialLinksTab({ companyId }) {
     const updateStatus = useSelector((state) => state.company.status);
     const updateError = useSelector((state) => state.company.error);
     const [isUpdating, setIsUpdating] = useState(false);
+    const { alertConfig, hideAlert, showSuccess, showError } = useCustomAlert();
 
     // Đổi từ object sang array để dễ thêm/xóa
     const [socialLinks, setSocialLinks] = useState([]);
@@ -85,8 +88,10 @@ export function SocialLinksTab({ companyId }) {
 
             const companyData = { socials: socialsObject };
             await dispatch(updateCompany({ companyId, companyData })).unwrap();
+            showSuccess("Update social links successfully");
         } catch (error) {
             console.error('Failed to update social links:', error);
+            showError("Failed to update social links");
         } finally {
             setIsUpdating(false);
         }
@@ -219,7 +224,7 @@ export function SocialLinksTab({ companyId }) {
                         <motion.button
                             type="button"
                             onClick={handleAddLink}
-                            className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                            className="cursor-pointer w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
                             whileHover={{ scale: 1.02, borderColor: "#2563eb" }}
                             whileTap={{ scale: 0.98 }}
                             initial={{ opacity: 0, y: 10 }}
@@ -248,7 +253,7 @@ export function SocialLinksTab({ companyId }) {
 
                     {/* Save Button */}
                     <motion.div
-                        className="flex justify-end pt-6 border-t border-gray-200 mt-8"
+                        className="flex cursor-pointer justify-end pt-6 border-t border-gray-200 mt-8"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.5, ease: "easeOut" }}
@@ -256,7 +261,7 @@ export function SocialLinksTab({ companyId }) {
                         <motion.button
                             type="submit"
                             disabled={isUpdating || updateStatus === 'loading'}
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+                            className="px-6 cursor-pointer py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
@@ -275,6 +280,7 @@ export function SocialLinksTab({ companyId }) {
                     </motion.div>
                 </form>
             </motion.section>
+            <CustomAlert {...alertConfig} onClose={hideAlert} />
         </div>
     );
 }

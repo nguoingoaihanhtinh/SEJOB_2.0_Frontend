@@ -15,6 +15,8 @@ import { getCategories } from '../../../../modules/services/categoriesService';
 import { getSkills } from '../../../../modules/services/skillsService';
 import { getCompanyTypes } from '../../../../modules/services/companyTypeService';
 import { getProvinces } from '../../../../modules/services/addressService';
+import { CustomAlert } from "@/components";
+import { useCustomAlert } from '../../../../hooks/useCustomAlert';
 
 export function OverviewTab({ company, companyId }) {
     const { t } = useTranslation();
@@ -34,6 +36,7 @@ export function OverviewTab({ company, companyId }) {
     const companyTypes = useSelector((state) => state.companyTypes?.companyTypes ?? []);
     const skills = useSelector((state) => state.skills?.skills ?? []);
     const [isUpdating, setIsUpdating] = useState(false);
+    const { alertConfig, hideAlert, showSuccess, showError } = useCustomAlert();
 
     // Company branches state
     const [companyBranches, setCompanyBranches] = useState([]);
@@ -204,10 +207,10 @@ export function OverviewTab({ company, companyId }) {
             };
 
             await dispatch(updateCompany({ companyId, companyData })).unwrap();
-
             dispatch(getCompany(companyId));
+            showSuccess("Cập nhật thông tin công ty thành công");
         } catch (error) {
-            console.error('Failed to update company:', error);
+            showError("Cập nhật thông tin công ty thất bại");
         } finally {
             setIsUpdating(false);
         }
@@ -517,7 +520,7 @@ export function OverviewTab({ company, companyId }) {
                         type="submit"
                         size="lg"
                         disabled={isUpdating || updateStatus === 'loading'}
-                        className="bg-primary hover:bg-primary/90 text-white px-8"
+                        className="cursor-pointer bg-primary hover:bg-primary/90 text-white px-8"
                     >
                         {isUpdating || updateStatus === 'loading' ? (
                             <>
@@ -546,6 +549,7 @@ export function OverviewTab({ company, companyId }) {
                     <p className="text-sm">{updateError}</p>
                 </motion.div>
             )}
+            <CustomAlert {...alertConfig} onClose={hideAlert} />
         </form>
     );
 }
