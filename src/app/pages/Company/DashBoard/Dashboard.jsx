@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Calendar, ChevronRight, TrendingUp, TrendingDown, Eye, FileCheck, X, Info } from "lucide-react";
+import { ChevronRight, Eye, FileCheck } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +13,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [timePeriod, setTimePeriod] = useState("Year");
   const [activeTab, setActiveTab] = useState("Overview");
-  const [showInfoBanner, setShowInfoBanner] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [jobsPage, setJobsPage] = useState(1);
   const [jobsLimit, setJobsLimit] = useState(4);
@@ -119,7 +118,7 @@ const Dashboard = () => {
         <div className="text-center">
           <p className="text-red-600 mb-4">{statsError || "Failed to load statistics"}</p>
           <button
-            onClick={() => dispatch(getCompanyStats({ companyId: currentUser.company_id, year: selectedYear }))}
+            onClick={() => dispatch(getCompanyStats({ companyId: currentUser.company?.id, year: selectedYear }))}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Retry
@@ -135,30 +134,6 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Info Banner */}
-        {showInfoBanner && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-            <div className="py-1">
-              <Info className="w-5 h-5 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-sm font-semibold text-blue-900 mb-1">
-                Lưu ý: Tính năng này đang trong quá trình hoàn thiện.
-              </h4>
-              <p className="text-sm text-blue-800">
-                Dữ liệu hiển thị hiện tại là dữ liệu mẫu và chưa phản ánh số liệu thực tế.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowInfoBanner(false)}
-              className="shrink-0 text-blue-600 hover:text-blue-800 transition-colors"
-              aria-label="Đóng thông báo"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -393,32 +368,26 @@ const Dashboard = () => {
                   <p className="text-sm text-gray-500 italic">No employment type data available</p>
                 )}
               </div>
+
+              {stats?.categories?.topSkills && Object.keys(stats.categories.topSkills).length > 0 && (
+                <div className="bg-white rounded-xl py-4 px-6 shadow-sm space-y-2">
+                  <h3 className="text-lg font-semibold text-gray-900">Top Skills</h3>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {Object.entries(stats.categories.topSkills).slice(0, 8).map(([skill, count]) => (
+                      <div key={skill} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">{skill}</span>
+                        <span className="font-medium text-gray-900">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Job Updates Section */}
         <div className="bg-white rounded-xl py-4 px-6 shadow-sm space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-            <div className="py-1">
-              <Info className="w-5 h-5 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-sm font-semibold text-blue-900 mb-1">
-                Lưu ý: Tính năng này đang trong quá trình hoàn thiện.
-              </h4>
-              <p className="text-sm text-blue-800">
-                Dữ liệu hiển thị hiện tại là dữ liệu mẫu và chưa phản ánh số liệu thực tế.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowInfoBanner(false)}
-              className="shrink-0 text-blue-600 hover:text-blue-800 transition-colors"
-              aria-label="Đóng thông báo"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-900">{t("company.dashboard.jobUpdates")}</h3>
             <button
