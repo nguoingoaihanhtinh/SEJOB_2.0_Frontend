@@ -1,14 +1,15 @@
 import { io } from "socket.io-client";
 import { receiveMessage, setOnlineUsers } from "./chatService";
 import store from "../../../store";
+import { PUBLIC_ENPOINT } from "../../../settings/localVar";
 
 let socket = null;
 
 export const initChatSocket = () => {
   if (socket) return socket;
 
-  socket = io("http://localhost:3000", {
-    withCredentials: true, // sends cookies automatically
+  socket = io(PUBLIC_ENPOINT, {
+    withCredentials: true,
   });
 
   socket.on("connect", () => {
