@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import { receiveMessage, setOnlineUsers } from "./chatService";
+import { receiveMessage, setOnlineUsers, fetchConversations } from "./chatService";
 import store from "../../../store";
 import { PUBLIC_ENPOINT } from "../../../settings/localVar";
 
