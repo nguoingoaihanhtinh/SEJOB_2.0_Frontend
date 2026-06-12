@@ -2,6 +2,7 @@ import { io } from "socket.io-client";
 import { receiveMessage, setOnlineUsers } from "./chatService";
 import store from "../../../store";
 import { PUBLIC_ENPOINT } from "../../../settings/localVar";
+import { getToken } from "../../../modules/utils/encryption";
 
 let socket = null;
 
@@ -10,6 +11,8 @@ export const initChatSocket = () => {
 
   socket = io(PUBLIC_ENPOINT, {
     withCredentials: true,
+    transports: ["websocket"],
+    auth: { token: getToken() },
   });
 
   socket.on("connect", () => {
