@@ -10,6 +10,7 @@ export const initChatSocket = () => {
 
   socket = io(PUBLIC_ENPOINT, {
     withCredentials: true,
+    transports: ["websocket"],
   });
 
   socket.on("connect", () => {
