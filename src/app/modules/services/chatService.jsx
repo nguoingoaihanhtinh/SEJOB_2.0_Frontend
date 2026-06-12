@@ -1,12 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-import { PUBLIC_ENPOINT } from "../../../settings/localVar";
+import axios from "../AxiosInstance";
 
 export const fetchConversations = createAsyncThunk(
   "chat/fetchConversations",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${PUBLIC_ENPOINT}/api/chat/conversations`, {
+      const response = await axios.get("/api/chat/conversations", {
         withCredentials: true,
       });
       return response.data.data;
@@ -20,7 +19,7 @@ export const fetchMessages = createAsyncThunk(
   "chat/fetchMessages",
   async (conversationId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${PUBLIC_ENPOINT}/api/chat/conversations/${conversationId}/messages`, {
+      const response = await axios.get(`/api/chat/conversations/${conversationId}/messages`, {
         withCredentials: true,
       });
       return { conversationId, messages: response.data.data };
@@ -35,7 +34,7 @@ export const initiateChat = createAsyncThunk(
   async ({ studentId, jobId }, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${PUBLIC_ENPOINT}/api/chat/conversations`,
+        "/api/chat/conversations",
         { studentId, jobId },
         { withCredentials: true }
       );
