@@ -52,6 +52,20 @@ export const fetchAdminReviews = createAsyncThunk(
   }
 );
 
+export const updateReview = createAsyncThunk(
+  "reviews/updateReview",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const response = await api.patch(`/api/reviews/${id}`, data);
+      message.success("Review updated successfully!");
+      return response.data;
+    } catch (error) {
+      message.error(error.response?.data?.message || "Failed to update review");
+      return rejectWithValue(error.response?.data);
+    }
+  }
+);
+
 export const approveReview = createAsyncThunk(
   "reviews/approveReview",
   async ({ id, is_approved }, { rejectWithValue }) => {
@@ -121,6 +135,17 @@ const reviewSlice = createSlice({
         const index = state.adminReviews.findIndex(r => r.id === action.payload.id);
         if (index !== -1) {
           state.adminReviews[index] = action.payload;
+        }
+      })
+      // Update Review
+      .addCase(updateReview.fulfilled, (state, action) => {
+        const idx = state.applicationReviews.findIndex(r => r.id === action.payload.id);
+        if (idx !== -1) {
+          state.applicationReviews[idx] = action.payload;
+        }
+        const idx2 = state.adminReviews.findIndex(r => r.id === action.payload.id);
+        if (idx2 !== -1) {
+          state.adminReviews[idx2] = action.payload;
         }
       })
       // Delete Review

@@ -7,7 +7,8 @@ export default function ReviewForm({
   initialData = {}, 
   title = "Write a Review", 
   submitLabel = "Submit Review",
-  variant = "standard" 
+  variant = "standard",
+  readOnly = false
 }) {
   const [rating, setRating] = useState(initialData.rating || 0);
   const [hover, setHover] = useState(0);
@@ -30,7 +31,7 @@ export default function ReviewForm({
         className="max-w-2xl mx-auto"
       >
         <form 
-          onSubmit={handleSubmit} 
+          onSubmit={readOnly ? (e) => e.preventDefault() : handleSubmit} 
           className="bg-[#fcfbf9] p-8 md:p-12 rounded-sm shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-[#e5e0d8] relative overflow-hidden"
         >
           {/* Subtle document background pattern */}
@@ -48,7 +49,7 @@ export default function ReviewForm({
                   <h2 className="text-2xl font-serif font-bold tracking-wide uppercase">Official Evaluation</h2>
                 </div>
                 <div className="text-sm font-mono text-gray-500 bg-white/50 px-3 py-1 border border-gray-200 rounded">
-                  DATE: {new Date().toLocaleDateString()}
+                  DATE: {initialData.created_at ? new Date(initialData.created_at).toLocaleDateString() : new Date().toLocaleDateString()}
                 </div>
               </div>
               <div className="space-y-2 font-serif text-sm bg-white/40 p-4 rounded border border-gray-200/50">
@@ -70,21 +71,32 @@ export default function ReviewForm({
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center space-x-1">
                     {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        className="p-1 focus:outline-none transition-transform duration-200 hover:scale-110"
-                        onClick={() => setRating(star)}
-                        onMouseEnter={() => setHover(star)}
-                        onMouseLeave={() => setHover(0)}
-                      >
-                        <Star
-                          size={32}
-                          fill={(hover || rating) >= star ? "#1f2937" : "none"}
-                          color={(hover || rating) >= star ? "#1f2937" : "#9ca3af"}
-                          strokeWidth={1.5}
-                        />
-                      </button>
+                      readOnly ? (
+                        <div key={star} className="p-1">
+                          <Star
+                            size={32}
+                            fill={rating >= star ? "#1f2937" : "none"}
+                            color={rating >= star ? "#1f2937" : "#9ca3af"}
+                            strokeWidth={1.5}
+                          />
+                        </div>
+                      ) : (
+                        <button
+                          key={star}
+                          type="button"
+                          className="p-1 focus:outline-none transition-transform duration-200 hover:scale-110"
+                          onClick={() => setRating(star)}
+                          onMouseEnter={() => setHover(star)}
+                          onMouseLeave={() => setHover(0)}
+                        >
+                          <Star
+                            size={32}
+                            fill={(hover || rating) >= star ? "#1f2937" : "none"}
+                            color={(hover || rating) >= star ? "#1f2937" : "#9ca3af"}
+                            strokeWidth={1.5}
+                          />
+                        </button>
+                      )
                     ))}
                   </div>
                   <span className="font-mono text-sm font-medium bg-gray-100 text-gray-700 px-4 py-1.5 rounded border border-gray-200">
@@ -96,35 +108,43 @@ export default function ReviewForm({
               {/* Formal Comment */}
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider text-gray-700 mb-3">Detailed Observations</label>
-                <textarea
-                  className="w-full px-5 py-4 bg-white/80 backdrop-blur-sm border border-gray-300 rounded shadow-sm focus:ring-1 focus:ring-gray-800 focus:border-gray-800 min-h-[180px] resize-y text-gray-800 font-sans leading-relaxed text-[15px]"
-                  placeholder="Please detail the student's professional conduct, skill application, and overall contribution..."
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                />
+                {readOnly ? (
+                  <div className="w-full px-5 py-4 bg-white/80 backdrop-blur-sm border border-gray-300 rounded shadow-sm min-h-[100px] text-gray-800 font-sans leading-relaxed text-[15px]">
+                    <p className="whitespace-pre-line">{comment || "No detailed comments provided."}</p>
+                  </div>
+                ) : (
+                  <textarea
+                    className="w-full px-5 py-4 bg-white/80 backdrop-blur-sm border border-gray-300 rounded shadow-sm focus:ring-1 focus:ring-gray-800 focus:border-gray-800 min-h-[180px] resize-y text-gray-800 font-sans leading-relaxed text-[15px]"
+                    placeholder="Please detail the student's professional conduct, skill application, and overall contribution..."
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                  />
+                )}
               </div>
 
               {/* Signature Area */}
               <div className="pt-8 border-t border-gray-200 mt-10">
                 <p className="mb-12 font-italic text-lg">Sincerely,</p>
                 <div className="w-64 border-b-2 border-gray-800 mb-3 relative">
-                  <span className="absolute bottom-1 right-2 text-xs text-gray-400 font-sans italic">Sign here</span>
+                  {!readOnly && <span className="absolute bottom-1 right-2 text-xs text-gray-400 font-sans italic">Sign here</span>}
                 </div>
                 <p className="text-sm text-gray-800 uppercase tracking-widest font-bold">Company Representative</p>
                 <p className="text-xs text-gray-500 uppercase mt-1">Authorized Signatory</p>
               </div>
             </div>
 
-            <div className="mt-12 flex justify-end">
-              <button
-                type="submit"
-                disabled={rating === 0}
-                className="flex items-center space-x-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-3.5 rounded-sm font-serif tracking-widest uppercase text-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] hover:shadow-[0_6px_20px_rgb(0,0,0,0.3)] hover:-translate-y-0.5"
-              >
-                <Send size={18} />
-                <span>{submitLabel}</span>
-              </button>
-            </div>
+            {!readOnly && (
+              <div className="mt-12 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={rating === 0}
+                  className="flex items-center space-x-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-3.5 rounded-sm font-serif tracking-widest uppercase text-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] hover:shadow-[0_6px_20px_rgb(0,0,0,0.3)] hover:-translate-y-0.5"
+                >
+                  <Send size={18} />
+                  <span>{submitLabel}</span>
+                </button>
+              </div>
+            )}
           </div>
         </form>
       </motion.div>
