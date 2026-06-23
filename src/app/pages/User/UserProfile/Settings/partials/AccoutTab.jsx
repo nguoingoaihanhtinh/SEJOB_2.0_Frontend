@@ -7,6 +7,7 @@ import { getToken } from "@/modules/utils/encryption";
 import { TOKEN } from "src/settings/localVar";
 import { changePassword, validatePassword } from "../../../../../modules";
 import { notification } from "antd";
+import RecommendationConfigSection from "./RecommendationConfigSection";
 
 export default function AccountTab() {
   const { t } = useTranslation();
@@ -218,6 +219,8 @@ export default function AccountTab() {
           </div>
         </div>
       </div>
+
+      <RecommendationConfigSection />
 
       <div className="border-t border-gray-200 pt-4 flex justify-end">
         <motion.button

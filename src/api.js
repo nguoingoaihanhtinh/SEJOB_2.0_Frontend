@@ -5,6 +5,7 @@ const cvApi = {};
 const jobApi = {};
 const mediaApi = {};
 const userApi = {};
+const studentApi = {};
 const companyApi = {};
 const companyTypeApi = {};
 const categoryApi = {};
@@ -134,7 +135,17 @@ levelApi.getLevels = async (filters = {}, options = {}) => {
   return _.get(res, "data");
 };
 
-export { cvApi, mediaApi, applicationApi, notificationApi, jobApi, userApi, companyApi, companyTypeApi, categoryApi, levelApi };
+studentApi.getStudent = async (studentId) => {
+  const res = await api.get(`/api/students/${studentId}`);
+  return _.get(res, "data");
+};
+
+studentApi.updateStudent = async (studentId, data) => {
+  const res = await api.put(`/api/students/${studentId}`, data);
+  return _.get(res, "data");
+};
+
+export { cvApi, mediaApi, applicationApi, notificationApi, jobApi, userApi, companyApi, companyTypeApi, categoryApi, levelApi, studentApi };
 
 // utils/buildSearchParams.js
 export const buildSearchParams = (filters = {}, options = {}) => {
