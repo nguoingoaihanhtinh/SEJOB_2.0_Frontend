@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, Share2 } from 'lucide-react';
+import { Building2, Share2, SlidersHorizontal } from 'lucide-react';
 import { OverviewTab } from './partials/OverviewTab';
 import { SocialLinksTab } from './partials/SocialLinksTab';
+import { ScoringConfigTab } from './partials/ScoringConfigTab';
 import { getCompany } from '../../../modules/services/companyService';
 
 export default function CompanySetting() {
@@ -24,6 +25,7 @@ export default function CompanySetting() {
   const tabs = [
     { id: 'overview', label: t("companySetting.tabs.overview"), icon: Building2 },
     { id: 'social-links', label: t("companySetting.tabs.socialLinks"), icon: Share2 },
+    { id: 'scoring-config', label: 'Chấm điểm', icon: SlidersHorizontal },
   ];
 
   return (
@@ -97,6 +99,9 @@ export default function CompanySetting() {
           )}
           {activeTab === 'social-links' && (
             <SocialLinksTab companyId={companyId} />
+          )}
+          {activeTab === 'scoring-config' && (
+            <ScoringConfigTab companyId={companyId} />
           )}
         </motion.div>
       </AnimatePresence>

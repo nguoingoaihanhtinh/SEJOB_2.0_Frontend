@@ -537,6 +537,7 @@ export function OverviewTab({ company, companyId }) {
                 </motion.div>
             </motion.div>
 
+<></>
             {/* Error Message */}
             {updateError && updateStatus === 'failed' && (
                 <motion.div
