@@ -124,7 +124,10 @@
     "phone_placeholder": "Not updated",
     "dob_placeholder": "Not updated",
     "gender_placeholder": "Not updated",
-    "location_placeholder": "Not updated"
+    "location_placeholder": "Not updated",
+    "scoringGuide": "CV Scoring Guide",
+    "scoringGuideDesc": "Fill in these sections to get the best CV score. Profile data overrides CV data.",
+    "missingWeight": "Missing"
   },
   "setting": {
     "my_account": "My Account",
@@ -531,6 +534,13 @@
     "perksBenefit": "Perks & Benefits",
     "perksBenefitDesc": "Benefits and perks offered for this role",
     "perksBenefitHint": "Add benefits to attract suitable candidates",
+    "scoringWeights": "Scoring Weights",
+    "scoringWeightsDesc": "Configure AI scoring weights for this job. Customize criteria or use defaults.",
+    "customizeWeights": "Customize Weights",
+    "resetDefaults": "Reset Defaults",
+    "totalWeight": "Total Weight",
+    "totalMustBe100": "Must equal 100",
+    "default": "Default",
     "previous": "Previous",
     "nextStep": "Next Step",
     "postJob": "Post Job",
@@ -598,7 +608,11 @@
     "quantityPlaceholder": "Enter quantity",
     "deadlineDate": "Deadline Date",
     "deadlineDateDesc": "Application deadline",
-    "deadlineDatePlaceholder": "Select date"
+    "deadlineDatePlaceholder": "Select date",
+    "customSections": "Custom Sections",
+    "customKeywordPlaceholder": "e.g. LEADERSHIP_EXPERIENCE",
+    "customWarning": "The AI will search the CV for this keyword. This is experimental and may lead to false positives or missed matches.",
+    "addCustomSection": "Add Custom Section"
   },
   "jobListing": {
     "title": "Job Listing",

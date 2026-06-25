@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Typography, IconButton, Button } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { Box, Typography, IconButton, Button, Alert } from '@mui/material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, InfoOutlined } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 
 export default function ExperienceSection({ experiences, showAll, onToggleShowAll, onEdit, onDelete, onAdd }) {
@@ -32,6 +32,10 @@ export default function ExperienceSection({ experiences, showAll, onToggleShowAl
           <AddIcon sx={{ fontSize: 18 }} />
         </IconButton>
       </Box>
+
+      <Alert severity="info" icon={<InfoOutlined fontSize="small" />} sx={{ mb: 2, py: 0.5, '& .MuiAlert-message': { fontSize: 13 } }}>
+        Skills mentioned in your experience description help evaluate your overall score. List your strongest skills confidently.
+      </Alert>
 
       {experiences.length === 0 ? (
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>

@@ -124,7 +124,10 @@
     "phone_placeholder": "Chưa cập nhật",
     "dob_placeholder": "Chưa cập nhật",
     "gender_placeholder": "Chưa cập nhật",
-    "location_placeholder": "Chưa cập nhật"
+    "location_placeholder": "Chưa cập nhật",
+    "scoringGuide": "Hướng dẫn chấm điểm CV",
+    "scoringGuideDesc": "Điền các mục này để đạt điểm CV tốt nhất. Dữ liệu hồ sơ ưu tiên hơn dữ liệu CV.",
+    "missingWeight": "Thiếu"
   },
   "setting": {
     "my_account": "Tài khoản của tôi",
@@ -530,6 +533,13 @@
     "perksBenefit": "Phúc lợi & Quyền lợi",
     "perksBenefitDesc": "Những quyền lợi và phúc lợi mà công ty cung cấp cho vị trí này",
     "perksBenefitHint": "Thêm các quyền lợi để thu hút ứng viên phù hợp",
+    "scoringWeights": "Cấu hình chấm điểm",
+    "scoringWeightsDesc": "Cấu hình trọng số chấm điểm cho vị trí này dựa trên AI. Bạn có thể tuỳ chỉnh hoặc dùng mặc định.",
+    "customizeWeights": "Tuỳ chỉnh trọng số",
+    "resetDefaults": "Đặt lại mặc định",
+    "totalWeight": "Tổng trọng số",
+    "totalMustBe100": "Phải bằng 100",
+    "default": "Mặc định",
     "previous": "Trước",
     "nextStep": "Bước tiếp theo",
     "postJob": "Đăng việc",
@@ -597,7 +607,11 @@
     "quantityPlaceholder": "Nhập số lượng",
     "deadlineDate": "Hạn chót nộp",
     "deadlineDateDesc": "Ngày hết hạn nộp hồ sơ",
-    "deadlineDatePlaceholder": "Chọn ngày"
+    "deadlineDatePlaceholder": "Chọn ngày",
+    "customSections": "Mục tuỳ chỉnh",
+    "customKeywordPlaceholder": "VD: LEADERSHIP_EXPERIENCE",
+    "customWarning": "AI sẽ tìm kiếm từ khoá này trong CV. Tính năng đang thử nghiệm, có thể dẫn đến kết quả chưa chính xác.",
+    "addCustomSection": "Thêm mục tuỳ chỉnh"
   },
   "jobListing": {
     "title": "Danh sách việc làm",

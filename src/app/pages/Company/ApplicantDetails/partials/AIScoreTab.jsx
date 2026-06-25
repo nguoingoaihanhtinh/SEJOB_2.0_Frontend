@@ -5,16 +5,25 @@ import { Spin } from "antd";
 import { LoadingOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 
-function BulletItem({ label, score, max, color }) {
+function BulletItem({ label, score, max, color, reason }) {
   const pct = max > 0 ? Math.round((score / max) * 100) : 0;
   return (
     <div className="flex items-center gap-3">
       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${color || "bg-gray-400"}`} />
-      <span className="text-sm text-gray-700 min-w-[130px]">{label}</span>
-      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full ${color || "bg-gray-400"}`} style={{ width: `${pct}%` }} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-700 min-w-[130px] font-medium">{label}</span>
+          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className={`h-full rounded-full ${color || "bg-gray-400"}`} style={{ width: `${pct}%` }} />
+          </div>
+          <span className="text-xs text-gray-500 font-mono w-14 text-right">{score}/{max}</span>
+        </div>
+        {reason && (
+          <p className="text-xs text-gray-500 italic mt-1 ml-[130px] truncate hover:whitespace-normal hover:overflow-visible" title={reason}>
+            {reason}
+          </p>
+        )}
       </div>
-      <span className="text-xs text-gray-500 font-mono w-14 text-right">{score}/{max}</span>
     </div>
   );
 }
@@ -62,6 +71,7 @@ function ScoreBreakdownBullets({ breakdown }) {
           score={item.score || 0}
           max={item.max || 10}
           color={colors[i % colors.length]}
+          reason={item.reason}
         />
       ))}
     </div>

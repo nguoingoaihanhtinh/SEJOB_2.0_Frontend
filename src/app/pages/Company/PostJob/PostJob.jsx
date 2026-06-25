@@ -5,10 +5,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { FileText, Briefcase, Gift, ArrowLeft, Heart, Plane, Video, Home, Coffee, Zap } from "lucide-react";
+import { FileText, Briefcase, Gift, ArrowLeft, Heart, Plane, Video, Home, Coffee, Zap, Scale } from "lucide-react";
 import Step1JobInfo from "./partials/Step1JobInfo";
 import Step2JobDescription from "./partials/Step2JobDescription";
 import Step3PerksBenefit from "./partials/Step3PerksBenefit";
+import Step4ScoringWeights from "./partials/Step4ScoringWeights";
 import { getCategories } from "../../../modules/services/categoriesService";
 import { getEmploymentTypes } from "../../../modules/services/employmentTypeService";
 import { getSkills } from "../../../modules/services/skillsService";
@@ -64,6 +65,8 @@ export default function PostJob({ isEditing = false, job = null, jobId = null })
   const [skillsSelect, setSkillsSelect] = useState([]);
   const [categoryIds, setCategoryIds] = useState([]);
   const [levelIds, setLevelIds] = useState([]);
+  const [scoringWeights, setScoringWeights] = useState(null);
+  const [useCustomWeights, setUseCustomWeights] = useState(false);
 
   // Ref to track if form has been populated (for edit mode)
   const hasPopulatedRef = useRef(false);
@@ -217,6 +220,7 @@ export default function PostJob({ isEditing = false, job = null, jobId = null })
     { number: 1, title: t("postJob.jobInformation"), icon: FileText },
     { number: 2, title: t("postJob.jobDescription"), icon: Briefcase },
     { number: 3, title: t("postJob.perksBenefit"), icon: Gift },
+    { number: 4, title: t("postJob.scoringWeights") || "Scoring Weights", icon: Scale },
   ];
 
   const employmentOptions =
@@ -374,6 +378,7 @@ export default function PostJob({ isEditing = false, job = null, jobId = null })
       quantity: quantity ? parseInt(quantity) : null,
       job_deadline: jobDeadline || null,
       status: "Approved",
+      scoring_weights: useCustomWeights && scoringWeights ? scoringWeights : null,
     };
 
     console.log("Payload before submit:", payload);
@@ -454,6 +459,7 @@ export default function PostJob({ isEditing = false, job = null, jobId = null })
       quantity: quantity ? parseInt(quantity) : null,
       job_deadline: jobDeadline || null,
       status: job?.status && job.status !== "Closed" ? job.status : "Pending",
+      scoring_weights: useCustomWeights && scoringWeights ? scoringWeights : null,
     };
 
     try {
@@ -530,7 +536,7 @@ export default function PostJob({ isEditing = false, job = null, jobId = null })
               </div>
               <div className="flex-1">
                 <p className={`text-sm font-medium ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-                  {t("postJob.step", { number: step.number })}/3
+                  {t("postJob.step", { number: step.number })}/4
                 </p>
                 <p className={`font-semibold ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
                   {step.title}
@@ -595,13 +601,21 @@ export default function PostJob({ isEditing = false, job = null, jobId = null })
             getBenefitIcon={getBenefitIcon}
           />
         )}
+        {currentStep === 4 && (
+          <Step4ScoringWeights
+            scoringWeights={scoringWeights}
+            setScoringWeights={setScoringWeights}
+            useCustomWeights={useCustomWeights}
+            setUseCustomWeights={setUseCustomWeights}
+          />
+        )}
         <div className="flex justify-between mt-8">
           {currentStep > 1 && (
             <Button variant="outline" size="lg" onClick={() => setCurrentStep(currentStep - 1)} className="px-8">
               {t("postJob.previous")}
             </Button>
           )}
-          {currentStep < 3 ? (
+          {currentStep < 4 ? (
             <Button
               size="lg"
               onClick={() => setCurrentStep(currentStep + 1)}
