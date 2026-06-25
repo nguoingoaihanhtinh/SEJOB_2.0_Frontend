@@ -221,6 +221,41 @@ export default function ApplicationModal({ open, setOpen, jobId }) {
           </button>
         </div>
 
+        {/* Profile Completeness Warning */}
+        {(() => {
+          const studentInfo = _.get(currentUser, 'student_info[0]', {});
+          const studentSkills = _.get(studentInfo, 'skills', []);
+          const missing = [];
+          if (!_.get(studentInfo, 'educations', []).length && !_.get(studentInfo, 'education', []).length) missing.push('Education');
+          if (!Array.isArray(studentSkills) || studentSkills.length === 0) missing.push('Skills');
+          if (!_.get(studentInfo, 'experiences', []).length) missing.push('Experience');
+          if (!_.get(studentInfo, 'projects', []).length) missing.push('Projects');
+          if (!_.get(studentInfo, 'certificates', []).length && !_.get(studentInfo, 'certifications', []).length) missing.push('Certifications');
+
+          if (missing.length > 0) {
+            return (
+              <div className="mx-6 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-amber-800">
+                      Your profile is missing: <strong>{missing.join(', ')}</strong>
+                    </p>
+                    <p className="text-xs text-amber-700 mt-1">
+                      Filling these in your profile can improve your CV score by up to{' '}
+                      <strong>{missing.includes('Projects') ? 20 : 10} points</strong>.{' '}
+                      <a href="/profile" className="underline font-medium hover:text-amber-900">Edit profile</a>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()}
+
         {/* Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 

@@ -34,8 +34,8 @@ export default function ExperienceSection({ experiences }) {
       </div>
 
       {experiences.length === 0 ? (
-        <p className="text-sm text-gray-500">
-          {t("profile.work_experience_empty")}
+        <p className="text-sm text-gray-400">
+          {t("profile.work_experience_empty_company") || "Not provided"}
         </p>
       ) : (
         experiences.map((exp, index) => (

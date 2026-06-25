@@ -96,6 +96,7 @@ export default function Step2JobDescription({
               </span>
             </div>
           </div>
+          <p className="mt-1 text-xs text-amber-600">{t("postJob.aiScoringHint") || "Used by AI scoring — write clearly with relevant keywords."}</p>
         </div>
       </div>
 
@@ -128,6 +129,7 @@ export default function Step2JobDescription({
               </span>
             </div>
           </div>
+          <p className="mt-1 text-xs text-amber-600">{t("postJob.aiScoringHint") || "Used by AI scoring — write clearly with relevant keywords."}</p>
         </div>
       </div>
 
@@ -160,6 +162,7 @@ export default function Step2JobDescription({
               </span>
             </div>
           </div>
+          <p className="mt-1 text-xs text-amber-600">{t("postJob.aiScoringHint") || "Used by AI scoring — write clearly with relevant keywords."}</p>
         </div>
       </div>
 
@@ -192,6 +195,7 @@ export default function Step2JobDescription({
               </span>
             </div>
           </div>
+          <p className="mt-1 text-xs text-amber-600">{t("postJob.aiScoringHint") || "Used by AI scoring — write clearly with relevant keywords."}</p>
         </div>
       </div>
     </div>

@@ -25,6 +25,7 @@ import { useProfileHandlers } from './hooks/useProfileHandlers';
 
 // Components
 import { ProfileModals } from './components/ProfileModals';
+import ScoringGuide from './components/ScoringGuide';
 import SocialLinkSections from './partials/SocialLinkSections';
 
 export default function Profile() {
@@ -172,6 +173,21 @@ export default function Profile() {
                                 onView={handlers.handleViewCV}
                                 onUpdateTitle={handlers.handleUpdateCVTitle}
                                 onAutofill={handlers.handleAutofillFromCV}
+                            />
+                        </motion.div>
+
+                        <motion.div
+                            initial="hidden"
+                            animate="visible"
+                            variants={sectionVariants}
+                            transition={{ duration: 0.5, delay: 0.25 }}
+                        >
+                            <ScoringGuide
+                                skills={skills}
+                                projects={projects}
+                                certificates={certificates}
+                                experiences={experiences}
+                                educations={educations}
                             />
                         </motion.div>
 

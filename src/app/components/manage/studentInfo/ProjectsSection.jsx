@@ -46,8 +46,8 @@ export default function ProjectsSection({ projects }) {
       </div>
 
       {projects.length === 0 ? (
-        <p className="text-sm text-gray-500">
-          {t("profile.featured_projects_empty")}
+        <p className="text-sm text-gray-400">
+          {t("profile.featured_projects_empty_company") || "Not provided"}
         </p>
       ) : (
         projects.map((project, index) => {

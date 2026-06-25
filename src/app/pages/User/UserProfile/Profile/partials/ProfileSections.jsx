@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Typography, IconButton, Chip, Link } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Link as LinkIcon } from '@mui/icons-material';
+import { Box, Typography, IconButton, Chip, Link, Alert } from '@mui/material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Link as LinkIcon, InfoOutlined } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 
 // Skills Section
@@ -166,6 +166,10 @@ export function ProjectsSection({ projects, onEdit, onDelete, onAdd }) {
           <AddIcon sx={{ fontSize: 18 }} />
         </IconButton>
       </Box>
+
+      <Alert severity="info" icon={<InfoOutlined fontSize="small" />} sx={{ mb: 2, py: 0.5, '& .MuiAlert-message': { fontSize: 13 } }}>
+        The tech stack you list in your projects is used to evaluate your skill depth and project complexity. Highlight your best skills here.
+      </Alert>
 
       {projects.length === 0 ? (
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
