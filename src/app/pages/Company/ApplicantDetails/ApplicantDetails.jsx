@@ -23,7 +23,11 @@ export default function ApplicantDetails() {
   const id = useParams().id;
   const { application, status: applicationStatus } = useSelector((state) => state.applications);
   const { user, status: userStatus } = useSelector((state) => state.user);
-  const studentInfo = application?.student ?? user?.student_info?.[0] ?? {};
+  const studentInfo = {
+    ...(application?.student || {}),
+    ...(user?.student_info?.[0] || {}),
+    full_name: user ? `${user.first_name || ""} ${user.last_name || ""}`.trim() : (application?.student?.full_name || ""),
+  };
   const [refreshFlag, setRefreshFlag] = useState(true);
   const componentRef = useRef();
 

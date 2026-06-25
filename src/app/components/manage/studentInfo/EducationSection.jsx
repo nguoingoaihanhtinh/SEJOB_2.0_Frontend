@@ -52,8 +52,8 @@ export default function EducationSection({ educations }) {
       </div>
 
       {educations.length === 0 ? (
-        <p className="text-sm text-gray-500">
-          {t("profile.education_empty")}
+        <p className="text-sm text-gray-400">
+          {t("profile.education_empty_company") || "Not provided"}
         </p>
       ) : (
         educations.map((edu, index) => (

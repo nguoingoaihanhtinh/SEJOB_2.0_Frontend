@@ -79,6 +79,7 @@
     "about_me_placeholder": "Giới thiệu điểm mạnh và số năm kinh nghiệm của bạn",
     "work_experience": "Kinh nghiệm làm việc",
     "work_experience_empty": "Thể hiện những thông tin chi tiết về quá trình làm việc",
+    "work_experience_empty_company": "Không có thông tin",
     "show_more_experiences": "Hiển thị thêm {{count}} kinh nghiệm",
     "education": "Học vấn",
     "education_empty": "Chia sẻ trình độ học vấn của bạn",
@@ -611,7 +612,10 @@
     "customSections": "Mục tuỳ chỉnh",
     "customKeywordPlaceholder": "VD: LEADERSHIP_EXPERIENCE",
     "customWarning": "AI sẽ tìm kiếm từ khoá này trong CV. Tính năng đang thử nghiệm, có thể dẫn đến kết quả chưa chính xác.",
-    "addCustomSection": "Thêm mục tuỳ chỉnh"
+    "quickAddCustom": "Thêm nhanh...",
+    "customPromptPlaceholder": "Hướng dẫn AI chấm điểm: cần tìm gì...",
+    "addCustomSection": "Thêm mục tuỳ chỉnh",
+    "aiScoringHint": "Được AI sử dụng để chấm điểm \u2014 hãy viết rõ ràng với từ khoá phù hợp."
   },
   "jobListing": {
     "title": "Danh sách việc làm",

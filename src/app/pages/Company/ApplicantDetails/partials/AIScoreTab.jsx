@@ -2,28 +2,25 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { scoreApplication, clearScoreResult } from "../../../../modules/services/applicationsService";
 import { Spin } from "antd";
-import { LoadingOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { LoadingOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 
-function BulletItem({ label, score, max, color, reason }) {
+function BulletItem({ label, score, max, reason }) {
   const pct = max > 0 ? Math.round((score / max) * 100) : 0;
   return (
-    <div className="flex items-center gap-3">
-      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${color || "bg-gray-400"}`} />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-700 min-w-[130px] font-medium">{label}</span>
-          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div className={`h-full rounded-full ${color || "bg-gray-400"}`} style={{ width: `${pct}%` }} />
-          </div>
-          <span className="text-xs text-gray-500 font-mono w-14 text-right">{score}/{max}</span>
+    <div className="py-1.5">
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-gray-700 min-w-[130px]">{label}</span>
+        <div className="flex-1 h-1.5 bg-gray-200 rounded overflow-hidden">
+          <div className="h-full bg-blue-600 rounded transition-all" style={{ width: `${pct}%` }} />
         </div>
-        {reason && (
-          <p className="text-xs text-gray-500 italic mt-1 ml-[130px] truncate hover:whitespace-normal hover:overflow-visible" title={reason}>
-            {reason}
-          </p>
-        )}
+        <span className="text-xs text-gray-500 w-14 text-right">{score}/{max}</span>
       </div>
+      {reason && (
+        <p className="text-xs text-gray-400 mt-0.5 ml-[130px] truncate hover:whitespace-normal hover:overflow-visible" title={reason}>
+          {reason}
+        </p>
+      )}
     </div>
   );
 }
@@ -41,7 +38,6 @@ function ScoreBreakdownBullets({ breakdown }) {
   if (breakdown.academic) {
     const ac = breakdown.academic;
     if (ac.major) items.push({ key: "major", label: "Major Match", ...ac.major });
-    if (ac.total) items.push({ key: "acTotal", label: "Academic Total", ...ac.total });
   }
   if (breakdown.projects) {
     const pr = breakdown.projects;
@@ -55,22 +51,20 @@ function ScoreBreakdownBullets({ breakdown }) {
   if (breakdown.experience) {
     items.push({ key: "exp", label: "Experience", ...breakdown.experience });
   }
-
-  const colors = [
-    "bg-blue-500", "bg-teal-500", "bg-indigo-500",
-    "bg-purple-500", "bg-violet-500",
-    "bg-amber-500", "bg-orange-500", "bg-red-500",
-    "bg-cyan-500", "bg-green-500",
-  ];
+  if (breakdown.custom_sections) {
+    for (const [key, val] of Object.entries(breakdown.custom_sections)) {
+      const label = key.startsWith("CUSTOM_") ? key.slice(7).replace(/_/g, " ") : key;
+      items.push({ key, label, score: val.score || 0, max: val.max || 0, reason: val.reason });
+    }
+  }
 
   return (
-    <div className="bg-gray-50 rounded-2xl p-4 shadow-sm space-y-2.5">
-      {items.map((item, i) => (
+    <div className="border border-gray-200 rounded-lg p-4 space-y-1">
+      {items.map((item) => (
         <BulletItem key={item.key}
           label={item.label}
           score={item.score || 0}
           max={item.max || 10}
-          color={colors[i % colors.length]}
           reason={item.reason}
         />
       ))}
@@ -121,80 +115,72 @@ export default function AIScoreTab({ application }) {
   if (!displayResult) return null;
 
   return (
-    <div className="space-y-6 animate-in fade-in zoom-in duration-300">
-      <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-linear-to-br from-indigo-50 to-blue-100 rounded-2xl shadow-md">
-        <div className="relative flex items-center justify-center w-28 h-28 rounded-full border-[6px] border-blue-600 bg-white shadow-md">
-          <span className="text-3xl font-black text-blue-700">{displayResult.score}%</span>
+    <div className="space-y-5">
+      <div className="flex flex-col md:flex-row items-center gap-5 p-5 border border-gray-200 rounded-lg">
+        <div className="flex items-center justify-center w-20 h-20 rounded-full border-4 border-blue-600 bg-white">
+          <span className="text-2xl font-bold text-blue-700">{displayResult.score}%</span>
         </div>
         <div className="flex-1 text-center md:text-left">
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-2">
-            <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-blue-700 to-indigo-700">
-              AI Match Analysis
-            </h3>
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-1">
+            <h3 className="text-lg font-semibold text-gray-800">AI Match Analysis</h3>
             <button
               onClick={() => {
                 dispatch(clearScoreResult());
                 dispatch(scoreApplication({ id: application.id, forceRefresh: true }));
               }}
               disabled={isScoring}
-              className="text-sm px-3 py-1 bg-gray-200 text-blue-600 rounded-md hover:bg-gray-300 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1"
+              className="text-xs px-2 py-0.5 border border-gray-300 text-gray-600 rounded hover:bg-gray-100 disabled:opacity-50"
             >
               {isScoring ? <LoadingOutlined /> : "Re-analyze"}
             </button>
           </div>
-          <p className="text-gray-700 leading-relaxed font-medium">{displayResult.analysis}</p>
+          <p className="text-sm text-gray-600">{displayResult.analysis}</p>
         </div>
       </div>
 
       <ScoreBreakdownBullets breakdown={displayResult.score_breakdown} />
 
-      <div className="bg-gray-50 rounded-2xl shadow-sm max-h-[calc(100vh-280px)] flex flex-col">
-        <div className="flex items-center gap-6 px-4 pt-3 pb-2 border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-          <h4 className="flex items-center gap-1.5 text-sm font-bold text-emerald-700">
-            <CheckCircleOutlined /> Matched ({displayResult.matched_skills?.length || 0})
-          </h4>
-          <h4 className="flex items-center gap-1.5 text-sm font-bold text-rose-700">
-            <CloseCircleOutlined /> Missing Req ({displayResult.missing_requirements?.length || 0})
-          </h4>
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <div className="flex items-center gap-4 px-4 py-2 border-b border-gray-200 bg-gray-50">
+          <span className="text-xs font-semibold text-gray-600">Matched ({displayResult.matched_skills?.length || 0})</span>
+          <span className="text-xs font-semibold text-gray-600">Missing Req ({displayResult.missing_requirements?.length || 0})</span>
           {displayResult.missing_nice_to_haves?.length > 0 && (
-            <h4 className="flex items-center gap-1.5 text-sm font-bold text-amber-700">
-              <CloseCircleOutlined /> Missing Nice ({displayResult.missing_nice_to_haves.length})
-            </h4>
+            <span className="text-xs font-semibold text-gray-600">Missing Nice ({displayResult.missing_nice_to_haves.length})</span>
           )}
         </div>
-        <div className="overflow-y-auto flex-1 p-4">
+        <div className="p-4 max-h-60 overflow-y-auto space-y-3">
           {displayResult.matched_skills?.length > 0 && (
-            <div className="mb-4">
-              <h5 className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-2">Matched Skills</h5>
-              <div className="flex flex-wrap gap-1.5">
+            <div>
+              <p className="text-xs font-medium text-gray-500 mb-1.5">Matched Skills</p>
+              <div className="flex flex-wrap gap-1">
                 {displayResult.matched_skills.map((s, i) => (
-                  <span key={i} className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">{s}</span>
+                  <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs border border-blue-200 rounded">{s}</span>
                 ))}
               </div>
             </div>
           )}
           {(!displayResult.matched_skills || displayResult.matched_skills.length === 0) && (
-            <p className="text-gray-400 italic text-sm mb-4">No matched skills.</p>
+            <p className="text-gray-400 text-xs">No matched skills.</p>
           )}
           {displayResult.missing_requirements?.length > 0 && (
-            <div className="mb-4">
-              <h5 className="text-xs font-semibold text-rose-600 uppercase tracking-wide mb-2">Missing Requirements</h5>
-              <div className="flex flex-wrap gap-1.5">
+            <div>
+              <p className="text-xs font-medium text-gray-500 mb-1.5">Missing Requirements</p>
+              <div className="flex flex-wrap gap-1">
                 {displayResult.missing_requirements.map((s, i) => (
-                  <span key={i} className="px-2.5 py-1 bg-rose-100 text-rose-700 text-xs font-medium rounded-full">{s}</span>
+                  <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs border border-gray-200 rounded">{s}</span>
                 ))}
               </div>
             </div>
           )}
           {(!displayResult.missing_requirements || displayResult.missing_requirements.length === 0) && (
-            <p className="text-gray-400 italic text-sm mb-4">Candidate fulfills all requirements!</p>
+            <p className="text-gray-400 text-xs">Candidate fulfills all requirements.</p>
           )}
           {displayResult.missing_nice_to_haves?.length > 0 && (
             <div>
-              <h5 className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-2">Missing Nice-to-haves</h5>
-              <div className="flex flex-wrap gap-1.5">
+              <p className="text-xs font-medium text-gray-500 mb-1.5">Missing Nice-to-haves</p>
+              <div className="flex flex-wrap gap-1">
                 {displayResult.missing_nice_to_haves.map((s, i) => (
-                  <span key={i} className="px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">{s}</span>
+                  <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs border border-gray-200 rounded">{s}</span>
                 ))}
               </div>
             </div>

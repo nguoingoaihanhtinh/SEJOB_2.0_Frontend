@@ -6,25 +6,39 @@ import { Button } from "@/components/ui/button";
 import { Scale, RotateCcw, Plus, X, AlertTriangle } from "lucide-react";
 
 const COMPONENTS = [
-  { key: "A1_REQUIRED", label: "Required Skills Match", default: 35, desc: "Percentage of required skills the candidate lists" },
-  { key: "A2_NICE", label: "Nice-to-have Skills", default: 10, desc: "Percentage of nice-to-have skills the candidate lists" },
-  { key: "A3_SKILL_DEPTH", label: "Skill Depth", default: 5, desc: "Whether skills are actually used in projects or experience" },
+  { key: "A1_REQUIRED", label: "Required Skills Match", default: 30, desc: "Percentage of required skills the candidate lists" },
+  { key: "A2_NICE", label: "Nice-to-have Skills", default: 5, desc: "Percentage of nice-to-have skills the candidate lists" },
+  { key: "A3_SKILL_DEPTH", label: "Skill Depth", default: 10, desc: "Whether skills are actually used in projects or experience" },
   { key: "B1_MAJOR", label: "Major / Field of Study", default: 10, desc: "How relevant the candidate's major is to the job" },
   { key: "B2_COURSES", label: "Course Mapping (disabled)", default: 0, desc: "Academically completed courses (currently disabled)" },
-  { key: "C1_PROJECT_COUNT", label: "Project Count", default: 5, desc: "Number of projects the candidate has done" },
+  { key: "C1_PROJECT_COUNT", label: "Project Count", default: 10, desc: "Number of projects the candidate has done" },
   { key: "C2_PROJECT_RELEVANCE", label: "Project Relevance to Job", default: 10, desc: "How well project technologies match job requirements" },
-  { key: "C3_PROJECT_COMPLEXITY", label: "Project Complexity", default: 5, desc: "Projects with advanced traits earn higher score" },
-  { key: "D_CERTIFICATIONS", label: "Certifications", default: 10, desc: "Number of relevant certifications obtained" },
-  { key: "E_EXPERIENCE", label: "Work Experience", default: 10, desc: "How relevant the candidate's work history is to IT" },
+  { key: "C3_PROJECT_COMPLEXITY", label: "Project Complexity", default: 10, desc: "Projects with advanced traits earn higher score" },
+  { key: "D_CERTIFICATIONS", label: "Certifications", default: 5, desc: "Number of relevant certifications obtained" },
+  { key: "E_EXPERIENCE", label: "Internship & Work Experience", default: 10, desc: "How relevant the candidate's experience is to IT" },
 ];
 
 const DEFAULT_WEIGHTS = Object.fromEntries(COMPONENTS.map((c) => [c.key, c.default]));
 
+const SUGGESTED_CUSTOM_SECTIONS = [
+  { keyword: "LANGUAGES", label: "Languages", prompt: "Look for language proficiency: IELTS, TOEIC, JLPT, TOPIK, HSK, or other certifications." },
+  { keyword: "CLUB_ACTIVITIES", label: "Club / Extracurricular Activities", prompt: "Look for club memberships, student organizations, extracurricular activities." },
+  { keyword: "COMPETITIONS", label: "Competitions / Contests", prompt: "Look for hackathons, programming contests, olympiads, or academic competitions." },
+  { keyword: "VOLUNTEER", label: "Volunteer Work", prompt: "Look for volunteer work, community service, non-profit involvement." },
+  { keyword: "OPEN_SOURCE", label: "Open Source Contributions", prompt: "Look for open source contributions, GitHub projects, public repositories." },
+  { keyword: "LEADERSHIP", label: "Leadership Experience", prompt: "Look for leadership roles: team lead, club president, project manager." },
+  { keyword: "SOFT_SKILLS", label: "Soft Skills", prompt: "Look for evidence of communication, teamwork, problem-solving, leadership." },
+  { keyword: "PUBLICATIONS", label: "Publications / Research", prompt: "Look for research papers, publications, thesis, academic research." },
+  { keyword: "AWARDS", label: "Awards & Honors", prompt: "Look for academic awards, scholarships, dean's list, honors." },
+];
+
 function parseCustomSections(weights) {
   const sections = [];
-  for (const key of Object.keys(weights)) {
+  const prompts = weights?.custom_section_prompts || {};
+  for (const key of Object.keys(weights || {})) {
     if (key.startsWith("CUSTOM_")) {
-      sections.push({ keyword: key.slice(7), weight: weights[key] });
+      const keyword = key.slice(7);
+      sections.push({ keyword, weight: weights[key], prompt: prompts[keyword] || "" });
     }
   }
   return sections;
@@ -41,16 +55,20 @@ export default function Step4ScoringWeights({ scoringWeights, setScoringWeights,
   const [total, setTotal] = useState(100);
 
   useEffect(() => {
-    const sum = Object.values(values).reduce((a, b) => a + (b || 0), 0);
+    const sum = Object.values(values).reduce((a, b) => a + (typeof b === "number" ? b : 0), 0);
     setTotal(sum);
   }, [values]);
 
   const emit = useCallback((nextValues, nextCustom) => {
     const merged = { ...nextValues };
+    const prompts = {};
     for (const sec of nextCustom) {
       const key = `CUSTOM_${sec.keyword}`;
       merged[key] = sec.weight;
+      if (sec.prompt) prompts[sec.keyword] = sec.prompt;
     }
+    if (Object.keys(prompts).length > 0) merged.custom_section_prompts = prompts;
+    else delete merged.custom_section_prompts;
     for (const key of Object.keys(merged)) {
       if (key.startsWith("CUSTOM_") && !nextCustom.some((s) => `CUSTOM_${s.keyword}` === key)) {
         delete merged[key];
@@ -90,6 +108,13 @@ export default function Step4ScoringWeights({ scoringWeights, setScoringWeights,
     const val = Math.min(100, Math.max(0, parseInt(raw) || 0));
     const next = [...customSections];
     next[idx] = { ...next[idx], weight: val };
+    setCustomSections(next);
+    emit(values, next);
+  };
+
+  const updateCustomPrompt = (idx, val) => {
+    const next = [...customSections];
+    next[idx] = { ...next[idx], prompt: val };
     setCustomSections(next);
     emit(values, next);
   };
@@ -194,6 +219,13 @@ export default function Step4ScoringWeights({ scoringWeights, setScoringWeights,
                   <X className="h-4 w-4" />
                 </Button>
               </div>
+              <textarea
+                placeholder={t("postJob.customPromptPlaceholder") || "Instructions for AI scoring: what to look for..."}
+                value={sec.prompt || ""}
+                onChange={(e) => updateCustomPrompt(idx, e.target.value)}
+                className="w-full text-sm border border-border rounded-md p-2 mb-2 bg-white resize-y min-h-[52px]"
+                rows={2}
+              />
               <div className="flex items-start gap-2 text-xs text-amber-700">
                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                 <span>
@@ -205,10 +237,34 @@ export default function Step4ScoringWeights({ scoringWeights, setScoringWeights,
         </div>
       )}
 
-      <Button variant="outline" size="sm" onClick={addCustom} className="gap-1">
-        <Plus className="h-4 w-4" />
-        {t("postJob.addCustomSection") || "Add Custom Section"}
-      </Button>
+      <div className="flex items-center gap-2">
+        <select
+          value=""
+          onChange={(e) => {
+            const kw = e.target.value;
+            if (!kw) return;
+            const found = SUGGESTED_CUSTOM_SECTIONS.find((s) => s.keyword === kw);
+            if (found && !customSections.some((s) => s.keyword === kw)) {
+              const next = [...customSections, { keyword: kw, weight: 5, prompt: found.prompt || "" }];
+              setCustomSections(next);
+              emit(values, next);
+            }
+            e.target.value = "";
+          }}
+          className="h-9 rounded-md border border-border bg-background px-3 text-sm text-muted-foreground"
+        >
+          <option value="">{t("postJob.quickAddCustom") || "Quick add..."}</option>
+          {SUGGESTED_CUSTOM_SECTIONS.filter(
+            (s) => !customSections.some((cs) => cs.keyword === s.keyword)
+          ).map((s) => (
+            <option key={s.keyword} value={s.keyword}>{s.label}</option>
+          ))}
+        </select>
+        <Button variant="outline" size="sm" onClick={addCustom} className="gap-1 shrink-0">
+          <Plus className="h-4 w-4" />
+          {t("postJob.addCustomSection") || "Add Custom Section"}
+        </Button>
+      </div>
     </div>
   );
 }

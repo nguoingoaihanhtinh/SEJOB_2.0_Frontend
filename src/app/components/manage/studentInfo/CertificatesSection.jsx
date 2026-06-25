@@ -30,8 +30,8 @@ export default function CertificatesSection({ certifications }) {
       </div>
 
       {certifications?.length === 0 ? (
-        <p className="text-sm text-gray-500">
-          {t("profile.certificates_empty")}
+        <p className="text-sm text-gray-400">
+          {t("profile.certificates_empty_company") || "Not provided"}
         </p>
       ) : (
         certifications?.map((cert, index) => (
