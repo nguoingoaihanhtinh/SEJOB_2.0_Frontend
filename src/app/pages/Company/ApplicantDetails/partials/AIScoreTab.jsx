@@ -17,7 +17,7 @@ function BulletItem({ label, score, max, reason }) {
         <span className="text-xs text-gray-500 w-14 text-right">{score}/{max}</span>
       </div>
       {reason && (
-        <p className="text-xs text-gray-400 mt-0.5 ml-[130px] truncate hover:whitespace-normal hover:overflow-visible" title={reason}>
+        <p className="text-xs text-gray-500 mt-0.5 ml-[130px] leading-relaxed">
           {reason}
         </p>
       )}
@@ -137,6 +137,28 @@ export default function AIScoreTab({ application }) {
           <p className="text-sm text-gray-600">{displayResult.analysis}</p>
         </div>
       </div>
+
+      {displayResult.confidence !== undefined && displayResult.confidence !== null && (
+        <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${displayResult.confidence < 10 ? "bg-red-50 border-red-200" : displayResult.confidence < 50 ? "bg-yellow-50 border-yellow-200" : "bg-green-50 border-green-200"}`}>
+          <span className={`text-lg font-bold ${displayResult.confidence < 10 ? "text-red-600" : displayResult.confidence < 50 ? "text-yellow-600" : "text-green-600"}`}>
+            {displayResult.confidence}%
+          </span>
+          <div className="flex-1">
+            <p className={`text-xs font-medium ${displayResult.confidence < 10 ? "text-red-700" : displayResult.confidence < 50 ? "text-yellow-700" : "text-green-700"}`}>
+              {displayResult.confidence < 10
+                ? "Độ tin cậy thấp — Công ty nên tự đánh giá thêm"
+                : displayResult.confidence < 50
+                  ? "Độ tin cậy trung bình"
+                  : "Độ tin cậy cao"}
+            </p>
+            {displayResult.confidence < 10 && (
+              <p className="text-xs text-red-500 mt-0.5">
+                Trường học/ngành học của ứng viên không có trong cơ sở dữ liệu, hoặc kỹ năng không được trích xuất đầy đủ.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       <ScoreBreakdownBullets breakdown={displayResult.score_breakdown} />
 
