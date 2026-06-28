@@ -15,7 +15,7 @@ export default function HeroSection({ onSearch, initialKeyword = '', initialLoca
 
     return (
         <Box
-            className="bg-linear-to-br from-gray-50 to-blue-400 py-2 md:py-3 relative overflow-hidden w-full"
+            className="bg-linear-to-br from-gray-50 to-blue-400 py-2 md:py-3 relative w-full"
         >
 
             <Container

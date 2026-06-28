@@ -46,6 +46,12 @@ jobApi.findAllJob = async (params) => {
     }
 }
 
+jobApi.suggestJobs = async (q, size = 8) => {
+  const params = buildSearchParams({ q }, { size });
+  const res = await api.get(`/api/jobs/suggest`, { params });
+  return _.get(res, "data.data") || [];
+};
+
 mediaApi.upload = async (formData) => {
     try {
         const data = await api.post(`/api/media/upload`, formData);

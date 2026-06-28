@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Box,
     Paper,
     InputAdornment,
-    Divider,
-    Autocomplete
+    Autocomplete,
+    CircularProgress,
 } from '@mui/material';
 import { Search, LocationOn, Clear } from '@mui/icons-material';
 import Input from '../common/Input';
 import Button from '../common/Button';
+import { jobApi } from '../../../api';
 
 // Hard-coded TopCV city list
 const TOPCV_CITIES = [
@@ -97,8 +98,16 @@ export default function SearchBar({
     const [keyword, setKeyword] = useState(initialKeyword || '');
     const [location, setLocation] = useState(initialLocation || DEFAULT_LOCATION);
     const [isHighlighted, setIsHighlighted] = useState(false);
-    const keywordInputRef = React.useRef(null);
-    const searchBarRef = React.useRef(null);
+
+    // Suggestion state
+    const [suggestions, setSuggestions] = useState([]);
+    const [suggestLoading, setSuggestLoading] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [activeIndex, setActiveIndex] = useState(-1);
+
+    const keywordInputRef = useRef(null);
+    const searchBarRef = useRef(null);
+    const debounceTimer = useRef(null);
 
     // If parent updates initial values (e.g. URL changed), sync local state
     useEffect(() => {
@@ -109,50 +118,90 @@ export default function SearchBar({
         setLocation(initialLocation || DEFAULT_LOCATION);
     }, [initialLocation]);
 
-    const normalizeText = (text) => {
-        return text.trim().replace(/\s+/g, ' ');
+    const normalizeText = (text) => text.trim().replace(/\s+/g, ' ');
+
+    const triggerSearch = useCallback((kw) => {
+        const q = normalizeText(kw !== undefined ? kw : keyword);
+        setShowSuggestions(false);
+        setIsHighlighted(false);
+        onSearch({ keyword: q, location: location?.value ? location : null });
+    }, [keyword, location, onSearch]);
+
+    const handleSearch = () => triggerSearch();
+
+    const handleSuggestionClick = (text) => {
+        setKeyword(text);
+        triggerSearch(text);
     };
 
-    const handleSearch = () => {
-        const normalizedKeyword = normalizeText(keyword);
-        if (!location.value) {
-            onSearch({ keyword: normalizedKeyword, location: null });
+    const handleKeyDown = (event) => {
+        if (!showSuggestions) {
+            if (event.key === 'Enter') triggerSearch();
             return;
         }
-        onSearch({ keyword: normalizedKeyword, location });
-    };
-
-    const handleKeyPress = (event) => {
-        if (event.key === 'Enter') {
-            handleSearch();
-            setIsHighlighted(false);
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            setActiveIndex(prev => Math.min(prev + 1, suggestions.length - 1));
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            setActiveIndex(prev => Math.max(prev - 1, -1));
+        } else if (event.key === 'Enter') {
+            event.preventDefault();
+            if (activeIndex >= 0 && suggestions[activeIndex]) {
+                handleSuggestionClick(suggestions[activeIndex]);
+            } else {
+                triggerSearch();
+            }
+        } else if (event.key === 'Escape') {
+            setShowSuggestions(false);
+            setActiveIndex(-1);
         }
     };
 
     const handleClearKeyword = () => {
         setKeyword('');
+        setSuggestions([]);
+        setShowSuggestions(false);
         setIsHighlighted(true);
-        setTimeout(() => {
-            if (keywordInputRef.current) {
-                keywordInputRef.current.focus();
-            }
-        }, 0);
+        setTimeout(() => keywordInputRef.current?.focus(), 0);
     };
 
+    // Debounced suggestion fetch
+    useEffect(() => {
+        clearTimeout(debounceTimer.current);
+        const trimmed = keyword.trim();
+        if (trimmed.length < 2) {
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+        debounceTimer.current = setTimeout(async () => {
+            setSuggestLoading(true);
+            try {
+                const results = await jobApi.suggestJobs(trimmed, 8);
+                setSuggestions(results);
+                setShowSuggestions(results.length > 0);
+                setActiveIndex(-1);
+            } catch {
+                setSuggestions([]);
+            } finally {
+                setSuggestLoading(false);
+            }
+        }, 300);
+        return () => clearTimeout(debounceTimer.current);
+    }, [keyword]);
+
+    // Close on outside click
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (searchBarRef.current && !searchBarRef.current.contains(event.target)) {
                 setIsHighlighted(false);
+                setShowSuggestions(false);
             }
         };
-
-        if (isHighlighted) {
-            document.addEventListener('mousedown', handleClickOutside);
-            return () => {
-                document.removeEventListener('mousedown', handleClickOutside);
-            };
-        }
-    }, [isHighlighted]);
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const options = React.useMemo(() => {
         return [
@@ -230,7 +279,7 @@ export default function SearchBar({
                                 <Input
                                     {...params}
                                     placeholder={locationPlaceholder}
-                                    onKeyPress={handleKeyPress}
+                                    onKeyDown={handleKeyDown}
                                     InputProps={{
                                         ...params.InputProps,
                                         startAdornment: (
@@ -260,44 +309,104 @@ export default function SearchBar({
                         inputRef={keywordInputRef}
                         placeholder={placeholder}
                         value={keyword}
-                        onChange={(e) => setKeyword(e.target.value)}
-                        onKeyPress={handleKeyPress}
+                        onChange={(e) => { setKeyword(e.target.value); setIsHighlighted(true); }}
+                        onFocus={() => { setIsHighlighted(true); if (suggestions.length > 0) setShowSuggestions(true); }}
+                        onKeyDown={handleKeyDown}
                         sx={{
                             ...(isHighlighted && {
                                 '& .MuiOutlinedInput-root': {
                                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
                                     borderColor: 'primary.main',
-                                    '&:hover': {
-                                        borderColor: 'primary.main',
-                                    },
-                                    '&.Mui-focused': {
-                                        borderColor: 'primary.main',
-                                    },
+                                    '&:hover': { borderColor: 'primary.main' },
+                                    '&.Mui-focused': { borderColor: 'primary.main' },
                                 },
                             }),
                         }}
                         startAdornment={
                             <InputAdornment position="start">
-                                <Search color="action" />
+                                {suggestLoading
+                                    ? <CircularProgress size={18} />
+                                    : <Search color="action" />}
                             </InputAdornment>
                         }
                         endAdornment={
                             keyword && (
                                 <InputAdornment position="end">
                                     <Clear
-                                        sx={{
-                                            cursor: 'pointer',
-                                            color: 'action.active',
-                                            '&:hover': {
-                                                color: 'action.hover',
-                                            },
-                                        }}
+                                        sx={{ cursor: 'pointer', color: 'action.active', '&:hover': { color: 'action.hover' } }}
                                         onClick={handleClearKeyword}
                                     />
                                 </InputAdornment>
                             )
                         }
                     />
+
+                    {/* ── Suggestion Dropdown ── */}
+                    {showSuggestions && suggestions.length > 0 && (
+                        <div style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 6px)',
+                            left: 0,
+                            right: 0,
+                            zIndex: 1400,
+                            background: '#fff',
+                            borderRadius: 8,
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+                            border: '1px solid #e0e0e0',
+                            animation: 'sgSlideDown 0.15s ease-out',
+                        }}>
+                            <style>{`
+                                @keyframes sgSlideDown {
+                                    from { opacity: 0; transform: translateY(-6px); }
+                                    to   { opacity: 1; transform: translateY(0); }
+                                }
+                                .sg-item:hover, .sg-item.active {
+                                    background: #f5f5f5;
+                                }
+                                .sg-item .sg-text {
+                                    font-size: 14px;
+                                    color: #333;
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                }
+                                .sg-item.active .sg-text {
+                                    font-weight: 600;
+                                }
+                            `}</style>
+
+                            {/* Header */}
+                            <div style={{ padding: '8px 16px 4px', fontSize: 11, fontWeight: 600, color: '#888', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+                                GỢI Ý TÌM KIẾM
+                            </div>
+
+                            {/* Items */}
+                            <div style={{ paddingBottom: 4 }} >
+                                {suggestions.map((text, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={`sg-item${idx === activeIndex ? ' active' : ''}`}
+                                        onMouseEnter={() => setActiveIndex(idx)}
+                                        onMouseDown={(e) => { e.preventDefault(); handleSuggestionClick(text); }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 10,
+                                            padding: '8px 16px',
+                                            cursor: 'pointer',
+                                            background: idx === activeIndex ? '#f5f5f5' : 'transparent',
+                                        }}
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#aaa" style={{ flexShrink: 0 }}>
+                                            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                                        </svg>
+                                        <span className="sg-text">{text}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </Box>
 
                 <Button
