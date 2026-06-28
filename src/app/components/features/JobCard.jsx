@@ -515,44 +515,60 @@ export default function JobCard({
                     cursor: onClick ? 'pointer' : 'default',
                     border: '1px solid',
                     borderColor: 'divider',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                    borderRadius: 3,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    overflow: 'hidden',
+                    '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: '4px',
+                        bgcolor: primaryColor,
+                        opacity: 0,
+                        transition: 'opacity 0.3s ease',
+                    },
                     '&:hover': {
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                        borderColor: primaryLightColor,
-                        transition: 'all 0.2s ease-in-out',
+                        boxShadow: '0 12px 24px rgba(0,0,0,0.1)',
+                        borderColor: 'transparent',
+                        transform: 'translateY(-4px)',
+                        '&::before': { opacity: 1 },
                     }
                 }}
             >
                 <CardContent sx={{
                     flexGrow: 1,
-                    p: 2,
+                    p: 2.5,
                     display: 'flex',
                     justifyContent: 'space-between',
                     flexDirection: 'column',
+                    gap: 1.5,
                     '&:last-child': {
-                        paddingBottom: 2
+                        paddingBottom: 2.5
                     }
                 }}>
                     {variant === 'list' && (
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.75rem' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: -0.5 }}>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', backgroundColor: '#4caf50' }}></span>
                                 {getTimeAgo(created_at || createdAt) || publish || 'Đăng gần đây'}
                             </Typography>
-                            <div className='space-x-2'>
+                            <div className='space-x-2 flex items-center'>
                                 {isTopCV && (
                                     <Chip
                                         label="TopCV"
                                         size="small"
                                         sx={{
-                                            bgcolor: '#00B14F',
+                                            background: 'linear-gradient(135deg, #00B14F 0%, #00d25e 100%)',
                                             color: 'white',
                                             fontWeight: 700,
-                                            fontSize: '0.75rem',
-                                            height: '24px',
+                                            fontSize: '0.7rem',
+                                            height: '22px',
                                             borderRadius: '6px',
-                                            '& .MuiChip-label': {
-                                                px: 1.5
-                                            }
+                                            boxShadow: '0 2px 6px rgba(0, 177, 79, 0.25)',
+                                            '& .MuiChip-label': { px: 1.25 }
                                         }}
                                     />
                                 )}
@@ -561,15 +577,14 @@ export default function JobCard({
                                         label="New"
                                         size="small"
                                         sx={{
-                                            bgcolor: '#FF6B2C',
+                                            background: 'linear-gradient(135deg, #FF6B2C 0%, #ff8c5a 100%)',
                                             color: 'white',
                                             fontWeight: 700,
-                                            fontSize: '0.75rem',
-                                            height: '24px',
+                                            fontSize: '0.7rem',
+                                            height: '22px',
                                             borderRadius: '6px',
-                                            '& .MuiChip-label': {
-                                                px: 1.5
-                                            }
+                                            boxShadow: '0 2px 6px rgba(255, 107, 44, 0.25)',
+                                            '& .MuiChip-label': { px: 1.25 }
                                         }}
                                     />
                                 )}
@@ -579,12 +594,11 @@ export default function JobCard({
                                         onClick={handleBookmarkClick}
                                     />
                                 )}
-
                             </div>
                         </Box>
                     )}
 
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.25 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                         <Avatar
                             src={companyLogoUrl || undefined}
                             variant="square"
@@ -593,15 +607,16 @@ export default function JobCard({
                             }}
                             sx={{
                                 bgcolor: isValidUrl(companyLogoUrl) ? '#ffffff' : primaryColor,
-                                width: variant === 'list' ? 72 : 64,
-                                height: variant === 'list' ? 72 : 64,
+                                width: variant === 'list' ? 68 : 60,
+                                height: variant === 'list' ? 68 : 60,
                                 fontSize: '1.25rem',
                                 fontWeight: 'bold',
-                                borderRadius: 1.5,
+                                borderRadius: 2,
                                 flexShrink: 0,
                                 border: '1px solid',
                                 borderColor: 'divider',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                                p: 0.5,
                                 '& img': {
                                     objectFit: 'contain',
                                 }
@@ -610,14 +625,14 @@ export default function JobCard({
                             {companyLogoInitial}
                         </Avatar>
 
-                        <Box sx={{ flexGrow: 1, minWidth: 0, flex: 1, pr: variant === 'list' ? 1 : 6 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5, mb: 0.5 }} {...hoverProps}>
+                        <Box sx={{ flexGrow: 1, minWidth: 0, flex: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }} {...hoverProps}>
                                 <Typography
                                     variant="h6"
                                     sx={{
-                                        fontWeight: 600,
-                                        fontSize: variant === 'list' ? '1.05rem' : '0.98rem',
-                                        lineHeight: 1.32,
+                                        fontWeight: 700,
+                                        fontSize: variant === 'list' ? '1.05rem' : '0.95rem',
+                                        lineHeight: 1.4,
                                         cursor: showPopup ? 'pointer' : 'default',
                                         color: 'text.primary',
                                         transition: 'color 0.2s ease-in-out',
@@ -625,7 +640,7 @@ export default function JobCard({
                                         WebkitLineClamp: 2,
                                         WebkitBoxOrient: 'vertical',
                                         overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
+                                        mb: 0.5,
                                         ...(showPopup && {
                                             '&:hover': {
                                                 color: primaryColor
@@ -635,55 +650,49 @@ export default function JobCard({
                                 >
                                     {title}
                                 </Typography>
+                                {!isTopCV && variant !== 'list' && (
+                                    <BookmarkButton
+                                        isBookmarked={localBookmarked}
+                                        onClick={handleBookmarkClick}
+                                    />
+                                )}
                             </Box>
 
                             <Typography
                                 variant="body2"
                                 sx={{
-                                    fontSize: '0.8rem',
-                                    lineHeight: 1.35,
+                                    fontSize: '0.8125rem',
                                     color: 'text.secondary',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px',
-                                    fontWeight: 400,
+                                    fontWeight: 500,
                                     display: '-webkit-box',
                                     WebkitLineClamp: 1,
                                     WebkitBoxOrient: 'vertical',
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
-                                    mb: 0
                                 }}
                             >
                                 {companyName}
                             </Typography>
-
-
                         </Box>
-                        {!isTopCV && variant !== 'list' && (
-                            <BookmarkButton
-                                isBookmarked={localBookmarked}
-                                onClick={handleBookmarkClick}
-                            />
-                        )}
                     </Box>
 
 
 
                     {variant === 'list' ? (
-                        <Stack direction="row" sx={{ flexWrap: 'wrap', rowGap: 1, columnGap: 2 }} >
+                        <Stack direction="row" sx={{ flexWrap: 'wrap', rowGap: 1, columnGap: 1, mt: 0.5 }} >
                             <Chip
                                 label={displaySalary}
                                 size="small"
                                 sx={{
-                                    bgcolor: primaryColor,
+                                    background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryLightColor || '#5cb85c'} 100%)`,
                                     color: 'white',
-                                    fontSize: '0.875rem',
-                                    fontWeight: 600,
-                                    height: '32px',
-                                    borderRadius: '4px',
+                                    fontSize: '0.8125rem',
+                                    fontWeight: 700,
+                                    height: '28px',
+                                    borderRadius: '6px',
+                                    boxShadow: `0 2px 8px rgba(0,0,0,0.15)`,
                                     '& .MuiChip-label': {
-                                        px: 2,
-                                        py: 0.5
+                                        px: 1.5,
                                     }
                                 }}
                             />
@@ -700,18 +709,17 @@ export default function JobCard({
                                                 label={truncatedLoc}
                                                 title={loc}
                                                 size="small"
+                                                icon={<span style={{ marginLeft: 8, fontSize: '12px' }}></span>}
                                                 sx={{
-                                                    bgcolor: '#f5f5f5',
+                                                    bgcolor: 'rgba(0, 0, 0, 0.04)',
                                                     color: 'text.secondary',
-                                                    fontSize: '0.8125rem',
+                                                    fontSize: '0.75rem',
                                                     fontWeight: 500,
-                                                    height: '32px',
-                                                    borderRadius: '20px',
-                                                    border: 'none',
-                                                    '& .MuiChip-label': {
-                                                        px: 2
-                                                    },
-                                                    ml: 0
+                                                    height: '28px',
+                                                    borderRadius: '6px',
+                                                    border: '1px solid',
+                                                    borderColor: 'divider',
+                                                    '& .MuiChip-label': { px: 1.5 }
                                                 }}
                                             />
                                         );
@@ -721,17 +729,17 @@ export default function JobCard({
                                     label={location.length > 35 ? location.substring(0, 35) + '...' : location}
                                     title={location}
                                     size="small"
+                                    icon={<span style={{ marginLeft: 8, fontSize: '12px' }}></span>}
                                     sx={{
-                                        bgcolor: '#f5f5f5',
+                                        bgcolor: 'rgba(0, 0, 0, 0.04)',
                                         color: 'text.secondary',
-                                        fontSize: '0.8125rem',
+                                        fontSize: '0.75rem',
                                         fontWeight: 500,
-                                        height: '32px',
-                                        borderRadius: '20px',
-                                        border: 'none',
-                                        '& .MuiChip-label': {
-                                            px: 2
-                                        }
+                                        height: '28px',
+                                        borderRadius: '6px',
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                        '& .MuiChip-label': { px: 1.5 }
                                     }}
                                 />
                             ) : null}
@@ -740,17 +748,17 @@ export default function JobCard({
                                 <Chip
                                     label={normalizedJob.experience}
                                     size="small"
+                                    icon={<span style={{ marginLeft: 8, fontSize: '12px' }}></span>}
                                     sx={{
-                                        bgcolor: '#f5f5f5',
+                                        bgcolor: 'rgba(0, 0, 0, 0.04)',
                                         color: 'text.secondary',
-                                        fontSize: '0.8125rem',
+                                        fontSize: '0.75rem',
                                         fontWeight: 500,
-                                        height: '32px',
-                                        borderRadius: '20px',
-                                        border: 'none',
-                                        '& .MuiChip-label': {
-                                            px: 2
-                                        }
+                                        height: '28px',
+                                        borderRadius: '6px',
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                        '& .MuiChip-label': { px: 1.5 }
                                     }}
                                 />
                             )}
@@ -762,23 +770,24 @@ export default function JobCard({
                             sx={{
                                 alignItems: 'center',
                                 flexWrap: 'nowrap',
-                                pl: 0
+                                pl: 0,
+                                mt: 0.5
                             }}
                         >
                             <Chip
                                 label={displaySalary}
                                 size="small"
                                 sx={{
-                                    bgcolor: primaryColor,
+                                    background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryLightColor || '#5cb85c'} 100%)`,
                                     color: 'white',
-                                    fontSize: '0.8rem',
-                                    fontWeight: 500,
-                                    height: '28px',
-                                    borderRadius: '8px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700,
+                                    height: '26px',
+                                    borderRadius: '6px',
+                                    boxShadow: `0 2px 6px rgba(0,0,0,0.15)`,
                                     flexShrink: 0,
                                     '& .MuiChip-label': {
-                                        px: 1.5,
-                                        py: 0.3
+                                        px: 1.25,
                                     }
                                 }}
                             />
@@ -787,19 +796,18 @@ export default function JobCard({
                                     label={location.length > 25 ? location.substring(0, 25) + '...' : location}
                                     title={location}
                                     size="small"
-                                    variant="outlined"
+                                    icon={<span style={{ marginLeft: 6, fontSize: '10px' }}></span>}
                                     sx={{
-                                        fontSize: '0.8rem',
-                                        height: '28px',
-                                        borderRadius: '8px',
-                                        borderColor: primaryColor,
-                                        color: primaryColor,
+                                        bgcolor: 'rgba(0, 0, 0, 0.04)',
+                                        color: 'text.secondary',
+                                        fontSize: '0.75rem',
                                         fontWeight: 500,
+                                        height: '26px',
+                                        borderRadius: '6px',
+                                        border: '1px solid',
+                                        borderColor: 'divider',
                                         flexShrink: 0,
-                                        '& .MuiChip-label': {
-                                            px: 1.5,
-                                            py: 0.3
-                                        }
+                                        '& .MuiChip-label': { px: 1.25 }
                                     }}
                                 />
                             )}
