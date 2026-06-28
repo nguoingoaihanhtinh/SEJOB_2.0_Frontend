@@ -10,6 +10,7 @@ const companyApi = {};
 const companyTypeApi = {};
 const categoryApi = {};
 const levelApi = {};
+const addressApi = {};
 
 const applicationApi = {};
 const notificationApi = {};
@@ -145,7 +146,12 @@ studentApi.updateStudent = async (studentId, data) => {
   return _.get(res, "data");
 };
 
-export { cvApi, mediaApi, applicationApi, notificationApi, jobApi, userApi, companyApi, companyTypeApi, categoryApi, levelApi, studentApi };
+addressApi.getProvinces = async () => {
+  const res = await api.get(`/api/address/provinces`);
+  return _.get(res, "data");
+};
+
+export { cvApi, mediaApi, applicationApi, notificationApi, jobApi, userApi, companyApi, companyTypeApi, categoryApi, levelApi, studentApi, addressApi };
 
 // utils/buildSearchParams.js
 export const buildSearchParams = (filters = {}, options = {}) => {

@@ -11,7 +11,8 @@ import {
   Close as CloseIcon,
   Download as DownloadIcon,
   MoreVert as MoreVertIcon,
-  AutoAwesome as AutoAwesomeIcon
+  AutoAwesome as AutoAwesomeIcon,
+  OpenInNew as OpenInNewIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 
@@ -140,17 +141,31 @@ export default function CVUpload({ cvs = [], onFileChange, onDelete, onView, onU
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
           {t("profile.cv_attachment")}
         </Typography>
-        {cvs.length > 0 && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Button
-            variant="contained"
+            variant="outlined"
             color="primary"
-            startIcon={<CloudUploadIcon />}
-            onClick={() => handleUploadClick(null)}
+            size="small"
+            startIcon={<OpenInNewIcon />}
+            href="https://canva.link/cmzf3xkhz681kxw"
+            target="_blank"
+            rel="noopener noreferrer"
             sx={{ fontWeight: 600 }}
           >
-            {t("profile.upload_cv")}
+            Xem mẫu CV
           </Button>
-        )}
+          {cvs.length > 0 && (
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<CloudUploadIcon />}
+              onClick={() => handleUploadClick(null)}
+              sx={{ fontWeight: 600 }}
+            >
+              {t("profile.upload_cv")}
+            </Button>
+          )}
+        </Box>
       </Box>
 
       <input

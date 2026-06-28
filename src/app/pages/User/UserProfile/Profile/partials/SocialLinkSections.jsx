@@ -36,7 +36,7 @@ const PLATFORMS = [
   { value: 'github', label: 'GitHub', icon: <GitHubIcon fontSize="small" />, color: '#24292F' },
   { value: 'twitter', label: 'Twitter / X', icon: <TwitterIcon fontSize="small" />, color: '#1D9BF0' },
   { value: 'instagram', label: 'Instagram', icon: <InstagramIcon fontSize="small" />, color: '#E1306C' },
-  { value: 'other', label: 'Khác', icon: <LanguageIcon fontSize="small" />, color: '#6B7280' },
+  { value: 'other', label: 'Other', icon: <LanguageIcon fontSize="small" />, color: '#6B7280' },
 ];
 
 function getPlatformMeta(platform) {
@@ -49,8 +49,8 @@ function EditRow({ initialPlatform, initialUrl = '', onSave, onCancel, loading, 
   const [urlError, setUrlError] = useState('');
 
   const validate = () => {
-    if (!url.trim()) { setUrlError('URL không được để trống'); return false; }
-    try { new URL(url); } catch { setUrlError('URL không hợp lệ'); return false; }
+    if (!url.trim()) { setUrlError('URL cannot be empty'); return false; }
+    try { new URL(url); } catch { setUrlError('Invalid URL'); return false; }
     setUrlError('');
     return true;
   };
@@ -69,10 +69,10 @@ function EditRow({ initialPlatform, initialUrl = '', onSave, onCancel, loading, 
       }}
     >
       <FormControl size="small" sx={{ minWidth: 150 }} disabled={isEdit}>
-        <InputLabel>Nền tảng</InputLabel>
+        <InputLabel>Platform</InputLabel>
         <Select
           value={platform}
-          label="Nền tảng"
+          label="Platform"
           onChange={(e) => setPlatform(e.target.value)}
           sx={{ borderRadius: '8px', fontSize: 13 }}
         >
@@ -106,7 +106,7 @@ function EditRow({ initialPlatform, initialUrl = '', onSave, onCancel, loading, 
       />
 
       <Box sx={{ display: 'flex', gap: 0.5, pt: 0.5 }}>
-        <Tooltip title="Lưu">
+        <Tooltip title="Save">
           <span>
             <IconButton
               size="small"
@@ -126,7 +126,7 @@ function EditRow({ initialPlatform, initialUrl = '', onSave, onCancel, loading, 
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title="Huỷ">
+        <Tooltip title="Cancel">
           <IconButton
             size="small"
             onClick={onCancel}
@@ -250,10 +250,10 @@ export default function SocialLinkSections({ currentUser, handlers }) {
           <LinkIcon sx={{ color: '#4f46e5', fontSize: 22 }} />
           <Box>
             <Typography sx={{ fontWeight: 700, fontSize: 16, color: '#1e1e2e', letterSpacing: '-0.2px' }}>
-              Mạng xã hội
+              Social Links
             </Typography>
             <Typography sx={{ fontSize: 12.5, color: '#9ca3af', mt: 0.2 }}>
-              Thể hiện các liên kết mạng xã hội của bạn
+              Showcase your social media profiles
             </Typography>
           </Box>
           {links.length > 0 && (
@@ -272,7 +272,7 @@ export default function SocialLinkSections({ currentUser, handlers }) {
           )}
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Tooltip title="Thêm liên kết" placement="top">
+          <Tooltip title="Add link" placement="top">
             <IconButton
               size="small"
               onClick={(e) => {
@@ -322,14 +322,14 @@ export default function SocialLinkSections({ currentUser, handlers }) {
             >
               <LinkIcon sx={{ fontSize: 36, opacity: 0.4 }} />
               <Typography sx={{ fontSize: 13.5, color: '#b0b7d4' }}>
-                Chưa có liên kết nào. Nhấn{' '}
+                No links yet. Click{' '}
                 <span
                   style={{ color: '#4f46e5', cursor: 'pointer', fontWeight: 600 }}
                   onClick={() => setAdding(true)}
                 >
-                  + Thêm
+                  + Add
                 </span>{' '}
-                để bắt đầu.
+                to get started.
               </Typography>
             </Box>
           ) : (
@@ -413,7 +413,7 @@ export default function SocialLinkSections({ currentUser, handlers }) {
                             flexShrink: 0,
                           }}
                         >
-                          <Tooltip title="Chỉnh sửa">
+                          <Tooltip title="Edit">
                             <IconButton
                               size="small"
                               onClick={() => setEditingPlatform(link.platform)}
@@ -429,7 +429,7 @@ export default function SocialLinkSections({ currentUser, handlers }) {
                               <EditOutlinedIcon sx={{ fontSize: 15 }} />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Xoá">
+                          <Tooltip title="Delete">
                             <span>
                               <IconButton
                                 size="small"
@@ -487,7 +487,7 @@ export default function SocialLinkSections({ currentUser, handlers }) {
                 '&:hover': { bgcolor: '#ede9fe' },
               }}
             >
-              Thêm liên kết
+              Add link
             </Button>
           )}
         </Box>

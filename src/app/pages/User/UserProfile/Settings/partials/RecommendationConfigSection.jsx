@@ -3,48 +3,48 @@ import { SlidersHorizontal, Save, RotateCcw, Info, ChevronDown, X } from "lucide
 import { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { notification, Tooltip } from "antd";
-import { studentApi, categoryApi, levelApi } from "../../../../../../api";
+import { studentApi, categoryApi, levelApi, addressApi } from "../../../../../../api";
 import _ from "lodash";
 
-// Danh sách các key có thể cấu hình cho recommendation
-// selectable: true => hiển thị multi-select để user chọn values cụ thể
+// List of configurable keys for recommendation
+// selectable: true => show multi-select so users can pick specific values
 const RECOMMENDATION_KEYS = [
   {
     key: "skills",
     query_key: "skills.name",
-    label: "Kỹ năng (Skills)",
-    description: "Ưu tiên công việc khớp với kỹ năng của bạn",
+    label: "Skills",
+    description: "Prioritize jobs that match your skills",
     defaultScore: 7,
     selectable: false,
   },
   {
     key: "company_branches",
     query_key: "company_branches.province.id",
-    label: "Địa điểm làm việc",
-    description: "Ưu tiên công việc gần tỉnh/thành phố của bạn",
+    label: "Work Location",
+    description: "Prioritize jobs near your preferred province/city",
     defaultScore: 5,
-    selectable: false,
+    selectable: true,
   },
   {
     key: "categories",
     query_key: "categories.id",
-    label: "Ngành nghề (Category)",
-    description: "Ưu tiên công việc thuộc lĩnh vực bạn quan tâm",
+    label: "Industry (Category)",
+    description: "Prioritize jobs in fields you are interested in",
     defaultScore: 4,
     selectable: true,
   },
   {
     key: "levels",
     query_key: "levels.name",
-    label: "Cấp bậc (Level)",
-    description: "Ưu tiên công việc phù hợp cấp bậc của bạn",
+    label: "Job Level",
+    description: "Prioritize jobs that match your seniority level",
     defaultScore: 3,
     selectable: true,
   },
 ];
 
 // ------- Multi-select dropdown component -------
-function MultiSelectDropdown({ options = [], selected = [], onChange, disabled, placeholder = "Chọn..." }) {
+function MultiSelectDropdown({ options = [], selected = [], onChange, disabled, placeholder = "Select..." }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -74,7 +74,7 @@ function MultiSelectDropdown({ options = [], selected = [], onChange, disabled, 
         <span className="flex-1 text-left truncate">
           {selectedLabels.length === 0
             ? <span className="text-gray-400">{placeholder}</span>
-            : <span className="text-gray-700">{selectedLabels.length} đã chọn</span>
+            : <span className="text-gray-700">{selectedLabels.length} selected</span>
           }
         </span>
         <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -105,7 +105,7 @@ function MultiSelectDropdown({ options = [], selected = [], onChange, disabled, 
             className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"
           >
             {options.length === 0
-              ? <p className="text-sm text-gray-400 px-3 py-2">Không có dữ liệu</p>
+              ? <p className="text-sm text-gray-400 px-3 py-2">No data available</p>
               : options.map((o) => (
                 <button
                   key={o.value}
@@ -145,15 +145,16 @@ export default function RecommendationConfigSection() {
       query_key: item.query_key,
       score: item.defaultScore,
       enabled: true,
-      values: [],   // chỉ dùng cho selectable keys
+      values: [],   // only used for selectable keys
     }))
   );
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  // Options loaded từ API
+  // Options loaded from API
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [levelOptions, setLevelOptions] = useState([]);
+  const [provinceOptions, setProvinceOptions] = useState([]);
 
   const [api, contextHolder] = notification.useNotification({ stack: { threshold: 3 } });
 
@@ -161,21 +162,26 @@ export default function RecommendationConfigSection() {
     api[type]({ title, description, showProgress: true, pauseOnHover: true });
   }
 
-  // Load categories, levels và student config
+  // Load categories, levels, provinces and student config
   useEffect(() => {
     const loadAll = async () => {
       try {
-        // Load options
-        const [catRes, lvlRes] = await Promise.all([
+        // Load options from API
+        const [catRes, lvlRes, provRes] = await Promise.all([
           categoryApi.getCategories({}, { pageSize: 100 }),
           levelApi.getLevels({}, { pageSize: 100 }),
+          addressApi.getProvinces(),
         ]);
         const cats = (catRes?.data || catRes || []).map((c) => ({ value: c.id, label: c.name }));
         const lvls = (lvlRes?.data || lvlRes || []).map((l) => ({ value: l.name, label: l.name }));
+        // Backend: { success, data: [{ id, country_id, name }] }
+        const provList = Array.isArray(provRes?.data) ? provRes.data : Array.isArray(provRes) ? provRes : [];
+        const provs = provList.map((p) => ({ value: p.id, label: p.name }));
         setCategoryOptions(cats);
         setLevelOptions(lvls);
+        setProvinceOptions(provs);
 
-        // Load student config
+        // Load saved student config
         if (currentUser) {
           const res = await studentApi.getStudent(studentId);
           const savedConfig = res?.data?.recommendation_config;
@@ -193,8 +199,8 @@ export default function RecommendationConfigSection() {
             setConfigs(merged);
           }
         }
-      } catch {
-        // giữ default
+      } catch { // keep defaults on error
+
       } finally {
         setInitialLoading(false);
       }
@@ -205,6 +211,7 @@ export default function RecommendationConfigSection() {
   const getOptions = (key) => {
     if (key === "categories") return categoryOptions;
     if (key === "levels") return levelOptions;
+    if (key === "company_branches") return provinceOptions;
     return [];
   };
 
@@ -241,7 +248,7 @@ export default function RecommendationConfigSection() {
 
   const handleSave = async () => {
     if (!studentId) {
-      openNotification("Lỗi", "Không tìm thấy thông tin sinh viên", "error");
+      openNotification("Error", "Student information not found", "error");
       return;
     }
     setLoading(true);
@@ -258,9 +265,9 @@ export default function RecommendationConfigSection() {
       await studentApi.updateStudent(studentId, {
         studentData: { recommendation_config },
       });
-      openNotification("Lưu thành công", "Cấu hình gợi ý việc làm đã được cập nhật", "success");
+      openNotification("Saved successfully", "Job recommendation settings have been updated", "success");
     } catch (err) {
-      openNotification("Lưu thất bại", err?.message || "Có lỗi xảy ra", "error");
+      openNotification("Save failed", err?.message || "An error occurred", "error");
     } finally {
       setLoading(false);
     }
@@ -270,19 +277,19 @@ export default function RecommendationConfigSection() {
     <>
       {contextHolder}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 border-t border-gray-200 pt-4">
-        {/* Left column */}
+        {/* Left column — description */}
         <div className="lg:col-span-4">
           <div className="flex items-center gap-2 mb-2">
             <SlidersHorizontal className="w-4 h-4 text-blue-600" />
-            <p className="body-normal font-semibold text-gray-900">Cấu hình gợi ý việc làm</p>
+            <p className="body-normal font-semibold text-gray-900">Job Recommendation Settings</p>
           </div>
           <p className="text-gray-500 text-sm">
-            Điều chỉnh mức độ ưu tiên (score) cho từng tiêu chí. Score càng cao, tiêu chí đó càng quan trọng (tối đa 20).
-            Với ngành nghề và cấp bậc, bạn có thể chọn cụ thể giá trị mong muốn.
+            Adjust the priority score for each criterion. A higher score means greater importance (max 20).
+            For industry and job level, you can also select specific values.
           </p>
         </div>
 
-        {/* Right column */}
+        {/* Right column — config cards */}
         <div className="lg:col-span-8">
           {initialLoading ? (
             <div className="flex items-center justify-center py-8">
@@ -305,7 +312,7 @@ export default function RecommendationConfigSection() {
                         isEnabled ? "border-blue-200 bg-blue-50/40" : "border-gray-200 bg-gray-50 opacity-60"
                       }`}
                     >
-                      {/* Top row: toggle + label + score */}
+                      {/* Header row: toggle + label + score */}
                       <div className="flex items-center gap-4 p-3">
                         {/* Toggle */}
                         <button
@@ -349,7 +356,7 @@ export default function RecommendationConfigSection() {
                         </div>
                       </div>
 
-                      {/* Bottom row: multi-select (chỉ cho selectable keys) */}
+                      {/* Multi-select row (selectable keys only) */}
                       {item.selectable && (
                         <div className="px-3 pb-3 pt-0">
                           <MultiSelectDropdown
@@ -357,7 +364,7 @@ export default function RecommendationConfigSection() {
                             selected={config?.values ?? []}
                             onChange={(vals) => handleValuesChange(item.key, vals)}
                             disabled={!isEnabled}
-                            placeholder={`Chọn ${item.label.toLowerCase()}...`}
+                            placeholder={`Select ${item.label.toLowerCase()}...`}
                           />
                         </div>
                       )}
@@ -376,7 +383,7 @@ export default function RecommendationConfigSection() {
                   className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  Đặt lại mặc định
+                  Reset to default
                 </motion.button>
                 <motion.button
                   type="button"
@@ -391,7 +398,7 @@ export default function RecommendationConfigSection() {
                   ) : (
                     <Save className="w-3.5 h-3.5" />
                   )}
-                  Lưu cấu hình
+                  Save settings
                 </motion.button>
               </div>
             </div>

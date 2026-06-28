@@ -60,7 +60,7 @@ export const getMergedJobs = createAsyncThunk(
                 )
             );
 
-            const response = await api.get(`${apiBaseUrl}/merged`, { params: queryParams });
+            const response = await api.get(`${apiBaseUrl}/`, { params: queryParams });
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Something went wrong");
@@ -233,8 +233,7 @@ const jobsSlice = createSlice({
                 state.status = "succeeded";
                 const responseData = action.payload.data || {};
                 state.jobs = [
-                    ...(responseData.jobs || []),
-                    ...(responseData.topcv || [])
+                    ...(responseData|| []),
                 ];
                 state.pagination = action.payload.pagination || null;
             })
