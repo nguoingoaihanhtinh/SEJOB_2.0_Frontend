@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Box, Typography, IconButton, Button, TextField, Menu, MenuItem } from '@mui/material';
+import { Box, Typography, IconButton, Button, TextField, Menu, MenuItem, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Chip, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import {
   CloudUpload as CloudUploadIcon,
   Description as DescriptionIcon,
@@ -12,9 +12,13 @@ import {
   Download as DownloadIcon,
   MoreVert as MoreVertIcon,
   AutoAwesome as AutoAwesomeIcon,
-  OpenInNew as OpenInNewIcon
+  OpenInNew as OpenInNewIcon,
+  LightbulbOutlined as LightbulbOutlinedIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { useCustomAlert } from '../../../../../hooks/useCustomAlert';
+import CustomAlert from '../../../../../components/common/CustomAlert';
 
 export default function CVUpload({ cvs = [], onFileChange, onDelete, onView, onUpdateTitle, onAutofill }) {
   const { t } = useTranslation();
@@ -26,6 +30,9 @@ export default function CVUpload({ cvs = [], onFileChange, onDelete, onView, onU
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [selectedCv, setSelectedCv] = useState(null);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [advises, setAdvises] = useState([]);
+  const [advisesOpen, setAdvisesOpen] = useState(false);
+  const { alertConfig, hideAlert, showSuccess, showError, showWarning } = useCustomAlert();
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -152,7 +159,7 @@ export default function CVUpload({ cvs = [], onFileChange, onDelete, onView, onU
             rel="noopener noreferrer"
             sx={{ fontWeight: 600 }}
           >
-            Xem mẫu CV
+            CV Sample
           </Button>
           {cvs.length > 0 && (
             <Button
@@ -291,17 +298,23 @@ export default function CVUpload({ cvs = [], onFileChange, onDelete, onView, onU
                       onClick={async () => {
                         setIsExtracting(true);
                         try {
-                          await onAutofill(cv);
+                          const data = await onAutofill(cv);
+                          const extracted = data?.advises || [];
+                          setAdvises(extracted);
+                          setAdvisesOpen(true);
+                          showSuccess("CV extracted successfully!");
+                        } catch (error) {
+                          showError("Auto fill from CV failed!");
                         } finally {
                           setIsExtracting(false);
                         }
                       }}
                       size="small"
                       color="primary"
-                      title="Tự động điền từ CV"
+                      title="Auto fill from CV"
                       disabled={isExtracting}
                     >
-                      <AutoAwesomeIcon fontSize="small" />
+                      {isExtracting ? <CircularProgress size={20} /> : <AutoAwesomeIcon fontSize="small" />}
                     </IconButton>
                   )}
                   <IconButton
@@ -425,6 +438,148 @@ export default function CVUpload({ cvs = [], onFileChange, onDelete, onView, onU
           </Typography>
         </Box>
       )}
+
+      {/* Advises Dialog */}
+      <Dialog
+        open={advisesOpen}
+        onClose={() => setAdvisesOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            overflow: 'hidden',
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            py: 2.5,
+            px: 3,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+          }}
+        >
+          <AutoAwesomeIcon sx={{ fontSize: 24 }} />
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+              CV Improvement Suggestions
+            </Typography>
+            <Typography variant="caption" sx={{ opacity: 0.85 }}>
+              Based on the analysis of your CV
+            </Typography>
+          </Box>
+          <IconButton
+            onClick={() => setAdvisesOpen(false)}
+            sx={{ ml: 'auto', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.15)' } }}
+            size="small"
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent sx={{ p: 0 }}>
+          {advises.length === 0 ? (
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 1.5,
+                py: 5,
+                px: 3,
+                textAlign: 'center',
+              }}
+            >
+              <CheckCircleOutlineIcon sx={{ fontSize: 52, color: 'success.main' }} />
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Your CV looks great!
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                No specific suggestions — keep up the great work.
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ px: 1, py: 1.5 }}>
+              <Box sx={{ px: 2, pb: 1 }}>
+                <Chip
+                  label={`${advises.length} suggestion${advises.length !== 1 ? 's' : ''}`}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                  sx={{ fontWeight: 600 }}
+                />
+              </Box>
+              <List disablePadding>
+                {advises.map((advice, index) => (
+                  <ListItem
+                    key={index}
+                    alignItems="flex-start"
+                    sx={{
+                      px: 2,
+                      py: 1.25,
+                      borderRadius: 2,
+                      mx: 1,
+                      mb: 0.5,
+                      bgcolor: index % 2 === 0 ? 'action.hover' : 'transparent',
+                      '&:hover': { bgcolor: 'action.selected' },
+                      transition: 'background-color 0.15s',
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 36, mt: 0.25 }}>
+                      <Box
+                        sx={{
+                          width: 26,
+                          height: 26,
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Typography variant="caption" sx={{ color: 'white', fontWeight: 700, fontSize: '0.65rem' }}>
+                          {index + 1}
+                        </Typography>
+                      </Box>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={advice}
+                      primaryTypographyProps={{
+                        variant: 'body2',
+                        sx: { lineHeight: 1.6, color: 'text.primary' },
+                      }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+          )}
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
+          <Button
+            onClick={() => setAdvisesOpen(false)}
+            variant="contained"
+            sx={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              fontWeight: 600,
+              px: 3,
+            }}
+          >
+            Got it
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <CustomAlert
+        {...alertConfig}
+        onClose={hideAlert}
+      />
     </Box>
   );
 }

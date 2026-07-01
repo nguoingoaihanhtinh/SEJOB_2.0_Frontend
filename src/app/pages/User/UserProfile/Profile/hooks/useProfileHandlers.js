@@ -695,8 +695,7 @@ export const useProfileHandlers = ({
             const data = response?.data?.data;
 
             if (!data) {
-                alert('Không thể trích xuất dữ liệu từ CV');
-                return;
+                throw new Error("Không thể trích xuất dữ liệu từ CV")
             }
 
             console.log('CV extraction result:', data);
@@ -852,10 +851,10 @@ export const useProfileHandlers = ({
             }
 
             await dispatch(getMe()).unwrap();
-            alert('Tự động điền dữ liệu từ CV thành công!');
+
+
+            return data;
         } catch (error) {
-            console.error('Error auto-filling from CV:', error);
-            alert(error?.message || 'Có lỗi xảy ra khi tự động điền dữ liệu');
             throw error;
         }
     };
