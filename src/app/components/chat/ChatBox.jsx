@@ -13,9 +13,10 @@ export default function ChatBox({ chatData }) {
   const inputRef = useRef(null);
 
   const [inputValue, setInputValue] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false);
   const imageInputRef = useRef(null);
   const fileInputRef = useRef(null);
-  
+
   const { user: currentUser } = useSelector((state) => state.auth);
   const { onlineUsers } = useSelector((state) => state.chat);
 
@@ -46,8 +47,8 @@ export default function ChatBox({ chatData }) {
     if (!inputValue.trim()) return;
 
     const currentUserId = currentUser?.user_id || currentUser?.id;
-    const receiverId = participantInfo?.user_id || 
-                      (currentUserId === chatData.employerId ? chatData.studentId : chatData.employerId);
+    const receiverId =
+      participantInfo?.user_id || (currentUserId === chatData.employerId ? chatData.studentId : chatData.employerId);
 
     if (!receiverId) return;
 
@@ -90,12 +91,12 @@ export default function ChatBox({ chatData }) {
       exit={{ opacity: 0, y: 50 }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
       style={{
-        width: "320px",
-        height: isMinimized ? "56px" : "450px", // 56px header only
+        width: isExpanded ? "450px" : "320px",
+        height: isMinimized ? "56px" : isExpanded ? "600px" : "450px",
       }}
     >
       {/* Header */}
-      <div 
+      <div
         className="bg-gradient-to-r from-blue-600 to-blue-700 p-3 flex items-center justify-between shrink-0 cursor-pointer"
         onClick={handleMinimize}
       >
@@ -108,12 +109,14 @@ export default function ChatBox({ chatData }) {
             )}
           </div>
           <div>
-            <h3 className="font-semibold text-white text-sm">
+            <span className="font-medium text-white text-xl leading-tight">
               {participantInfo.first_name} {participantInfo.last_name}
-            </h3>
+            </span>
             <div className="flex items-center gap-1.5">
-              <div className={`w-2 h-2 rounded-full ${onlineUsers.includes(participantInfo.user_id) ? "bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]" : "bg-gray-400"}`}></div>
-              <span className="text-[10px] text-blue-100 font-medium">
+              <div
+                className={`w-1.5 h-1.5 rounded-full ${onlineUsers.includes(participantInfo.user_id) ? "bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]" : "bg-gray-400"}`}
+              ></div>
+              <span className="text-[9px] text-blue-100 font-medium">
                 {onlineUsers.includes(participantInfo.user_id) ? "Online" : "Offline"}
               </span>
             </div>
@@ -121,7 +124,20 @@ export default function ChatBox({ chatData }) {
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={(e) => { e.stopPropagation(); handleClose(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsExpanded(!isExpanded);
+            }}
+            className="p-1 hover:bg-white/20 rounded transition-colors text-white"
+            title={isExpanded ? "Shrink" : "Expand"}
+          >
+            {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClose();
+            }}
             className="p-1 hover:bg-white/20 rounded transition-colors text-white"
             title="Close"
           >
@@ -133,7 +149,7 @@ export default function ChatBox({ chatData }) {
       {!isMinimized && (
         <>
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-3 bg-gray-50 space-y-3">
+          <div className="flex-1 overflow-y-auto overscroll-contain p-3 bg-gray-50 space-y-3">
             {messages.length === 0 ? (
               <div className="text-center text-xs text-gray-400 mt-4">
                 No messages yet. Send a message to start the conversation!
@@ -150,7 +166,7 @@ export default function ChatBox({ chatData }) {
                   >
                     {!isMine && (
                       <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 bg-blue-100 overflow-hidden mt-1">
-                         {participantInfo.avatar ? (
+                        {participantInfo.avatar ? (
                           <img src={participantInfo.avatar} alt="avatar" className="w-full h-full object-cover" />
                         ) : (
                           <User className="w-3 h-3 text-blue-600" />
@@ -184,39 +200,34 @@ export default function ChatBox({ chatData }) {
                   accept="image/*"
                   className="hidden"
                 />
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={(e) => onFileChange(e, "file")}
-                  className="hidden"
-                />
-                <button 
+                <input type="file" ref={fileInputRef} onChange={(e) => onFileChange(e, "file")} className="hidden" />
+                <button
                   onClick={() => handleFileSelect("image")}
-                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" 
+                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                   title="Send image"
                 >
                   <Image className="w-4 h-4" />
                 </button>
-                <button 
+                <button
                   onClick={() => handleFileSelect("file")}
-                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" 
+                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                   title="Send file"
                 >
                   <Paperclip className="w-4 h-4" />
                 </button>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button 
-                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" 
+                    <button
+                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                       title="Emoji"
                     >
                       <Smile className="w-4 h-4" />
                     </button>
                   </PopoverTrigger>
                   <PopoverContent side="top" align="start" className="p-0 border-none w-auto z-[110]">
-                    <EmojiPicker 
-                      onEmojiClick={onEmojiClick} 
-                      width={300} 
+                    <EmojiPicker
+                      onEmojiClick={onEmojiClick}
+                      width={300}
                       height={400}
                       skinTonesDisabled
                       searchDisabled

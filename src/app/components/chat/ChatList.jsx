@@ -96,7 +96,7 @@ export default function ChatList({ onClose }) {
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-0.5">
-                      <h4 className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                      <h4 className="font-medium text-sm text-gray-900 truncate group-hover:text-blue-600 transition-colors">
                         {participant?.first_name} {participant?.last_name}
                       </h4>
                       <span className="text-[10px] text-gray-400">
